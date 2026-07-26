@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtualenv
+.venv/
+
+# Django
+db.sqlite3
+media/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
