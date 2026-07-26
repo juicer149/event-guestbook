@@ -1,4 +1,3 @@
-import os
 from enum import StrEnum
 
 from django.conf import settings
@@ -13,44 +12,33 @@ class GuestbookPhase(StrEnum):
 
 
 def development_phase_override() -> GuestbookPhase | None:
-    """
-    Return the phase selected through GUESTBOOK_DEV_PHASE.
-
-    Development overrides are ignored when DEBUG is false.
-    """
     if not settings.DEBUG:
         return None
 
-    value = os.environ.get(
+    configured_phase = getattr(
+        settings,
         "GUESTBOOK_DEV_PHASE",
         "",
     ).strip().lower()
 
-    if not value:
-        return None
-
     try:
-        return GuestbookPhase(value)
+        return GuestbookPhase(configured_phase)
     except ValueError:
         return None
 
 
+def schedule_is_bypassed() -> bool:
+    return getattr(
+        settings,
+        "GUESTBOOK_BYPASS_SCHEDULE",
+        False,
+    )
+
+
 def current_phase() -> GuestbookPhase:
-    """
-    Return the guestbook's current high-level phase.
+    if schedule_is_bypassed():
+        return GuestbookPhase.LIVE
 
-    PRE:
-        The event has not started.
-
-    LIVE:
-        Approved guests may create entries.
-
-    POST:
-        The guestbook remains readable but no new entries may be made.
-
-    CLOSED:
-        Public guestbook access has ended.
-    """
     override = development_phase_override()
 
     if override is not None:
@@ -70,18 +58,21 @@ def current_phase() -> GuestbookPhase:
     return GuestbookPhase.CLOSED
 
 
+def guestbook_is_available() -> bool:
+    if schedule_is_bypassed():
+        return True
+
+    return current_phase() != GuestbookPhase.CLOSED
+
+
 def guestbook_accepts_join() -> bool:
-    """
-    Return whether the shared QR access key may be redeemed.
-    """
+    if schedule_is_bypassed():
+        return True
+
     override = development_phase_override()
 
     if override is not None:
-        return override in {
-            GuestbookPhase.PRE,
-            GuestbookPhase.LIVE,
-            GuestbookPhase.POST,
-        }
+        return override != GuestbookPhase.CLOSED
 
     now = timezone.now()
 
@@ -93,30 +84,7 @@ def guestbook_accepts_join() -> bool:
 
 
 def guestbook_accepts_entries() -> bool:
-    """
-    Return whether approved guests may create entries.
-    """
-    override = development_phase_override()
+    if schedule_is_bypassed():
+        return True
 
-    if override is not None:
-        return override is GuestbookPhase.LIVE
-
-    now = timezone.now()
-
-    return (
-        settings.GUESTBOOK_STARTS_AT
-        <= now
-        < settings.GUESTBOOK_ENTRIES_CLOSE_AT
-    )
-
-
-def guestbook_is_available() -> bool:
-    """
-    Return whether approved guests may view the guestbook.
-    """
-    override = development_phase_override()
-
-    if override is not None:
-        return override is not GuestbookPhase.CLOSED
-
-    return timezone.now() < settings.GUESTBOOK_CLOSES_AT
+    return current_phase() == GuestbookPhase.LIVE

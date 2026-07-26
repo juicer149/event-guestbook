@@ -332,6 +332,20 @@ GUESTBOOK_ACCESS_KEY = os.environ.get(
 )
 
 
+# Temporary production testing switch.
+#
+# True:
+#     Ignore the event schedule and behave as if the event is live.
+#
+# False:
+#     Use the configured event timestamps normally.
+
+GUESTBOOK_BYPASS_SCHEDULE = env_bool(
+    "GUESTBOOK_BYPASS_SCHEDULE",
+    default=False,
+)
+
+
 GUESTBOOK_STARTS_AT = datetime(
     2026,
     8,
