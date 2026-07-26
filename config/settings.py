@@ -6,6 +6,8 @@ from zoneinfo import ZoneInfo
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+STOCKHOLM_TZ = ZoneInfo("Europe/Stockholm")
+
 
 # Development settings.
 # These values must be replaced with environment variables before deployment.
@@ -146,7 +148,7 @@ GUESTBOOK_STARTS_AT = datetime(
     1,
     18,
     0,
-    tzinfo=ZoneInfo("Europe/Stockholm"),
+    tzinfo=STOCKHOLM_TZ,
 )
 
 GUESTBOOK_ENDS_AT = datetime(
@@ -155,10 +157,19 @@ GUESTBOOK_ENDS_AT = datetime(
     2,
     2,
     0,
-    tzinfo=ZoneInfo("Europe/Stockholm"),
+    tzinfo=STOCKHOLM_TZ,
+)
+
+GUESTBOOK_CLOSES_AT = datetime(
+    2026,
+    8,
+    4,
+    2,
+    0,
+    tzinfo=STOCKHOLM_TZ,
 )
 
 GUESTBOOK_ACCESS_KEY = os.environ.get(
     "GUESTBOOK_ACCESS_KEY",
-    "local-development-key",
+    "",
 )

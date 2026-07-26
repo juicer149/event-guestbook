@@ -6,10 +6,44 @@
 
 {% block body %}
     <main>
-        <h1>{{ title }}</h1>
+        <header>
+            <h1>{{ title }}</h1>
 
-        <p>
-            Fas: {{ phase }}
-        </p>
+            {% if phase == "pre" %}
+                <p>Gästboken öppnar när festen börjar.</p>
+            {% elif phase == "live" %}
+                <p>Festen pågår – dela gärna ett minne.</p>
+            {% elif phase == "post" %}
+                <p>Festen är över, men du kan fortfarande dela bilder och minnen.</p>
+            {% elif phase == "closed" %}
+                <p>Gästboken är nu stängd för nya inlägg.</p>
+            {% endif %}
+
+            {% if can_create_entry %}
+                <a href="{% url 'guestbook:create-entry' %}">
+                    Skapa inlägg
+                </a>
+            {% endif %}
+        </header>
+
+        <section aria-labelledby="entries-heading">
+            <h2 id="entries-heading">Inlägg</h2>
+
+            {% for entry in entries %}
+                <article>
+                    <h3>{{ entry.author_name }}</h3>
+
+                    {% if entry.message %}
+                        <p>{{ entry.message|linebreaksbr }}</p>
+                    {% endif %}
+
+                    <time datetime="{{ entry.created_at|date:'c' }}">
+                        {{ entry.created_at|date:"j F Y, H:i" }}
+                    </time>
+                </article>
+            {% empty %}
+                <p>Inga inlägg har lagts till ännu.</p>
+            {% endfor %}
+        </section>
     </main>
 {% endblock %}

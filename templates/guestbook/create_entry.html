@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Skapa inlägg – {{ title }}
+{% endblock %}
+
+{% block body %}
+    <main>
+        <a href="{% url 'guestbook:index' %}">
+            Tillbaka till gästboken
+        </a>
+
+        <h1>Skapa inlägg</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div>
+                {{ form.author_name.label_tag }}
+                {{ form.author_name }}
+                {{ form.author_name.errors }}
+            </div>
+
+            <div>
+                {{ form.message.label_tag }}
+                {{ form.message }}
+                {{ form.message.errors }}
+            </div>
+
+            <button type="submit">
+                Publicera
+            </button>
+        </form>
+    </main>
+{% endblock %}
