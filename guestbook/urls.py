@@ -12,7 +12,7 @@ urlpatterns = [
         name="index",
     ),
     path(
-        "join/<str:key>/",
+        "join/<str:access_key>/",
         views.join,
         name="join",
     ),

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -139,37 +139,37 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Guestbook configuration
-
-GUESTBOOK_TITLE = "Simon 30 år"
-
-GUESTBOOK_STARTS_AT = datetime(
-    2026,
-    8,
-    1,
-    18,
-    0,
-    tzinfo=STOCKHOLM_TZ,
+GUESTBOOK_TITLE = os.environ.get(
+    "GUESTBOOK_TITLE",
+    "Simons 30-årsfest",
 )
 
-GUESTBOOK_ENDS_AT = datetime(
-    2026,
-    8,
-    2,
-    2,
-    0,
-    tzinfo=STOCKHOLM_TZ,
+# YYYY, M, D, HH, M
+GUESTBOOK_STARTS_AT = datetime( 2026, 8, 1, 18, 0, tzinfo=STOCKHOLM_TZ )
+GUESTBOOK_ENDS_AT = datetime( 2026, 8, 2, 2, 0, tzinfo=STOCKHOLM_TZ )
+GUESTBOOK_CLOSES_AT = datetime( 2026, 8, 4, 2, 0, tzinfo=STOCKHOLM_TZ )
+GUESTBOOK_ACCESS_KEY = os.environ.get( "GUESTBOOK_ACCESS_KEY", "" )
+
+
+# Rules
+GUESTBOOK_JOIN_OPENS_AT = (
+    GUESTBOOK_STARTS_AT
+    - timedelta(hours=6)
 )
 
-GUESTBOOK_CLOSES_AT = datetime(
-    2026,
-    8,
-    4,
-    2,
-    0,
-    tzinfo=STOCKHOLM_TZ,
+GUESTBOOK_JOIN_CLOSES_AT = (
+    GUESTBOOK_ENDS_AT
+    + timedelta(hours=12)
 )
 
-GUESTBOOK_ACCESS_KEY = os.environ.get(
-    "GUESTBOOK_ACCESS_KEY",
-    "",
+GUESTBOOK_ENTRIES_CLOSE_AT = (
+    GUESTBOOK_ENDS_AT
+    + timedelta(days=1)
 )
+
+GUESTBOOK_CLOSES_AT = (
+    GUESTBOOK_ENDS_AT
+    + timedelta(days=7)
+)
+
+GUESTBOOK_GUEST_ACCESS_DURATION = timedelta(days=7)

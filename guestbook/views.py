@@ -3,12 +3,11 @@ from secrets import compare_digest
 from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods
 
 from .access import (
-    create_access_required,
-    grant_create_access,
-    has_create_access,
+    grant_guest_access,
+    guest_access_required,
+    has_guest_access,
 )
 from .forms import EntryForm
 from .models import Entry
@@ -16,19 +15,30 @@ from .phases import (
     current_phase,
     guestbook_accepts_entries,
     guestbook_accepts_join,
+    guestbook_is_available,
 )
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    entries = Entry.objects.order_by("-created_at")
+    if not guestbook_is_available():
+        raise Http404
+
+    if not has_guest_access(request):
+        raise Http404
+
+    entries = (
+        Entry.objects
+        .prefetch_related("images")
+        .order_by("-created_at")
+    )
 
     context = {
         "title": settings.GUESTBOOK_TITLE,
-        "phase": current_phase(),
         "entries": entries,
+        "phase": current_phase(),
         "can_create_entry": (
-            has_create_access(request)
-            and guestbook_accepts_entries()
+            guestbook_accepts_entries()
+            and has_guest_access(request)
         ),
     }
 
@@ -39,43 +49,58 @@ def index(request: HttpRequest) -> HttpResponse:
     )
 
 
-def join(request: HttpRequest, key: str) -> HttpResponse:
+def join(
+    request: HttpRequest,
+    access_key: str,
+) -> HttpResponse:
+    if not guestbook_accepts_join():
+        raise Http404
+
     configured_key = settings.GUESTBOOK_ACCESS_KEY
 
     if not configured_key:
         raise Http404
 
-    if not guestbook_accepts_join():
+    if not compare_digest(
+        access_key,
+        configured_key,
+    ):
         raise Http404
 
-    if not compare_digest(key, configured_key):
-        raise Http404
-
-    grant_create_access(request)
+    grant_guest_access(request)
 
     return redirect("guestbook:index")
 
 
-@create_access_required
-@require_http_methods(["GET", "POST"])
-def create_entry(request: HttpRequest) -> HttpResponse:
+@guest_access_required
+def create_entry(
+    request: HttpRequest,
+) -> HttpResponse:
+    if not guestbook_is_available():
+        raise Http404
+
     if not guestbook_accepts_entries():
         raise Http404
 
     if request.method == "POST":
-        form = EntryForm(request.POST)
+        form = EntryForm(
+            request.POST,
+            request.FILES,
+        )
 
         if form.is_valid():
             form.save()
 
-            return redirect("guestbook:index")
+            return redirect(
+                "guestbook:index",
+            )
     else:
         form = EntryForm()
 
     context = {
         "title": settings.GUESTBOOK_TITLE,
-        "phase": current_phase(),
         "form": form,
+        "phase": current_phase(),
     }
 
     return render(

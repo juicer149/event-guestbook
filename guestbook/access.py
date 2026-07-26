@@ -1,42 +1,69 @@
-from datetime import timedelta
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar
+from typing import Concatenate, ParamSpec, TypeVar
 
+from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
 
 
-SESSION_ACCESS_KEY = "guestbook_can_create"
-ACCESS_DURATION = timedelta(hours=48)
+SESSION_GUEST_ACCESS_KEY = "guestbook_guest_access"
 
 P = ParamSpec("P")
 R = TypeVar("R", bound=HttpResponse)
 
-
-def grant_create_access(request: HttpRequest) -> None:
-    request.session[SESSION_ACCESS_KEY] = True
-    request.session.set_expiry(ACCESS_DURATION)
+View = Callable[Concatenate[HttpRequest, P], R]
 
 
-def has_create_access(request: HttpRequest) -> bool:
-    return request.session.get(SESSION_ACCESS_KEY) is True
+def grant_guest_access(request: HttpRequest) -> None:
+    """
+    Mark the current browser session as belonging to an event guest.
+
+    The event's time windows still determine whether the guest may
+    read the guestbook or create new entries.
+    """
+    request.session[SESSION_GUEST_ACCESS_KEY] = True
+    request.session.set_expiry(
+        settings.GUESTBOOK_GUEST_ACCESS_DURATION,
+    )
 
 
-def revoke_create_access(request: HttpRequest) -> None:
-    request.session.pop(SESSION_ACCESS_KEY, None)
+def has_guest_access(request: HttpRequest) -> bool:
+    """
+    Return whether this browser has redeemed the guest access key.
+    """
+    return request.session.get(SESSION_GUEST_ACCESS_KEY) is True
 
 
-def create_access_required(
-    view_func: Callable[P, R],
-) -> Callable[P, R]:
+def revoke_guest_access(request: HttpRequest) -> None:
+    """
+    Remove guest access from the current browser session.
+    """
+    request.session.pop(
+        SESSION_GUEST_ACCESS_KEY,
+        None,
+    )
+
+
+def guest_access_required(
+    view_func: View[P, R],
+) -> View[P, R]:
+    """
+    Hide a view from browsers without redeemed guest access.
+    """
+
     @wraps(view_func)
     def wrapper(
         request: HttpRequest,
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> R:
-        if not has_create_access(request):
+        if not has_guest_access(request):
             raise Http404
 
-        return view_func(request, *args, **kwargs)
+        return view_func(
+            request,
+            *args,
+            **kwargs,
+        )
 
     return wrapper
