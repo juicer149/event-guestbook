@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "event-guestbook"
+version = "0.1.0"
+description = "A guestbook for a private event"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=6.0,<6.1",
+    "Pillow>=11",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "config",
+    "config.*",
+    "guestbook",
+    "guestbook.*",
+]
+exclude = [
+    "media",
+    "media.*",
+    "static",
+    "static.*",
+    "templates",
+    "templates.*",
+]
