@@ -12,7 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 STOCKHOLM_TZ = ZoneInfo("Europe/Stockholm")
 
 
+# ---------------------------------------------------------------------
 # Environment helpers
+# ---------------------------------------------------------------------
 
 
 def env_bool(
@@ -38,16 +40,20 @@ def env_list(
     *,
     default: str = "",
 ) -> list[str]:
-    value = os.environ.get(name, default)
-
     return [
         item.strip()
-        for item in value.split(",")
+        for item in os.environ.get(name, default).split(",")
         if item.strip()
     ]
 
 
+def unique(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
+# ---------------------------------------------------------------------
 # Environment
+# ---------------------------------------------------------------------
 
 DEBUG = env_bool(
     "DEBUG",
@@ -59,10 +65,12 @@ TESTING = "test" in sys.argv
 RAILWAY_PUBLIC_DOMAIN = os.environ.get(
     "RAILWAY_PUBLIC_DOMAIN",
     "",
-)
+).strip()
 
 
+# ---------------------------------------------------------------------
 # Security
+# ---------------------------------------------------------------------
 
 if DEBUG:
     SECRET_KEY = os.environ.get(
@@ -73,29 +81,28 @@ else:
     SECRET_KEY = os.environ["SECRET_KEY"]
 
 
-default_allowed_hosts = "localhost,127.0.0.1"
-
-if RAILWAY_PUBLIC_DOMAIN:
-    default_allowed_hosts += f",{RAILWAY_PUBLIC_DOMAIN}"
-
-
 ALLOWED_HOSTS = env_list(
     "ALLOWED_HOSTS",
-    default=default_allowed_hosts,
+    default="localhost,127.0.0.1",
 )
 
-
-default_csrf_origins = ""
-
 if RAILWAY_PUBLIC_DOMAIN:
-    default_csrf_origins = (
-        f"https://{RAILWAY_PUBLIC_DOMAIN}"
-    )
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+ALLOWED_HOSTS = unique(ALLOWED_HOSTS)
 
 
 CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS",
-    default=default_csrf_origins,
+)
+
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(
+        f"https://{RAILWAY_PUBLIC_DOMAIN}"
+    )
+
+CSRF_TRUSTED_ORIGINS = unique(
+    CSRF_TRUSTED_ORIGINS
 )
 
 
@@ -113,7 +120,9 @@ if not DEBUG:
     X_FRAME_OPTIONS = "DENY"
 
 
+# ---------------------------------------------------------------------
 # Application definition
+# ---------------------------------------------------------------------
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -176,6 +185,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 
+# ---------------------------------------------------------------------
 # Database
 #
 # Local development:
@@ -183,6 +193,7 @@ ASGI_APPLICATION = "config.asgi.application"
 #
 # Railway:
 #     DATABASE_URL -> PostgreSQL
+# ---------------------------------------------------------------------
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -195,7 +206,9 @@ DATABASES = {
 }
 
 
+# ---------------------------------------------------------------------
 # Password validation
+# ---------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -225,7 +238,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# ---------------------------------------------------------------------
 # Internationalization
+# ---------------------------------------------------------------------
 
 LANGUAGE_CODE = "sv-se"
 
@@ -236,7 +251,9 @@ USE_I18N = True
 USE_TZ = True
 
 
+# ---------------------------------------------------------------------
 # Static files
+# ---------------------------------------------------------------------
 
 STATIC_URL = "/static/"
 
@@ -272,6 +289,7 @@ STORAGES = {
 }
 
 
+# ---------------------------------------------------------------------
 # Uploaded media
 #
 # Local development:
@@ -279,6 +297,7 @@ STORAGES = {
 #
 # Railway with a volume:
 #     RAILWAY_VOLUME_MOUNT_PATH
+# ---------------------------------------------------------------------
 
 MEDIA_URL = "/media/"
 
@@ -290,12 +309,16 @@ MEDIA_ROOT = Path(
 )
 
 
+# ---------------------------------------------------------------------
 # Default primary key field type
+# ---------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+# ---------------------------------------------------------------------
 # Guestbook configuration
+# ---------------------------------------------------------------------
 
 GUESTBOOK_TITLE = os.environ.get(
     "GUESTBOOK_TITLE",
@@ -329,7 +352,9 @@ GUESTBOOK_ENDS_AT = datetime(
 )
 
 
+# ---------------------------------------------------------------------
 # Guestbook lifecycle
+# ---------------------------------------------------------------------
 
 GUESTBOOK_JOIN_OPENS_AT = (
     GUESTBOOK_STARTS_AT
