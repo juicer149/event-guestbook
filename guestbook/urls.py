@@ -5,6 +5,7 @@ from . import views
 
 app_name = "guestbook"
 
+
 urlpatterns = [
     path(
         "",
@@ -17,8 +18,8 @@ urlpatterns = [
         name="join",
     ),
     path(
-        "entries/new/",
-        views.create_entry,
-        name="create-entry",
+        "upload/",
+        views.upload_photos,
+        name="upload_photos",
     ),
 ]

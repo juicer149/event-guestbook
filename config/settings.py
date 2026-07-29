@@ -35,6 +35,24 @@ def env_bool(
     }
 
 
+def env_int(
+    name: str,
+    *,
+    default: int,
+) -> int:
+    value = os.environ.get(name)
+
+    if value is None:
+        return default
+
+    try:
+        return int(value)
+    except ValueError as error:
+        raise ValueError(
+            f"{name} must be an integer."
+        ) from error
+
+
 def env_list(
     name: str,
     *,
@@ -42,13 +60,20 @@ def env_list(
 ) -> list[str]:
     return [
         item.strip()
-        for item in os.environ.get(name, default).split(",")
+        for item in os.environ.get(
+            name,
+            default,
+        ).split(",")
         if item.strip()
     ]
 
 
-def unique(items: list[str]) -> list[str]:
-    return list(dict.fromkeys(items))
+def unique(
+    items: list[str],
+) -> list[str]:
+    return list(
+        dict.fromkeys(items)
+    )
 
 
 # ---------------------------------------------------------------------
@@ -87,9 +112,13 @@ ALLOWED_HOSTS = env_list(
 )
 
 if RAILWAY_PUBLIC_DOMAIN:
-    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+    ALLOWED_HOSTS.append(
+        RAILWAY_PUBLIC_DOMAIN,
+    )
 
-ALLOWED_HOSTS = unique(ALLOWED_HOSTS)
+ALLOWED_HOSTS = unique(
+    ALLOWED_HOSTS,
+)
 
 
 CSRF_TRUSTED_ORIGINS = env_list(
@@ -98,11 +127,11 @@ CSRF_TRUSTED_ORIGINS = env_list(
 
 if RAILWAY_PUBLIC_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(
-        f"https://{RAILWAY_PUBLIC_DOMAIN}"
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
     )
 
 CSRF_TRUSTED_ORIGINS = unique(
-    CSRF_TRUSTED_ORIGINS
+    CSRF_TRUSTED_ORIGINS,
 )
 
 
@@ -292,11 +321,15 @@ STORAGES = {
 # ---------------------------------------------------------------------
 # Uploaded media
 #
-# Local development:
+# This remains file-system based for now.
+#
+# Local:
 #     <project>/media/
 #
-# Railway with a volume:
+# Railway volume:
 #     RAILWAY_VOLUME_MOUNT_PATH
+#
+# Object storage will replace the default storage backend later.
 # ---------------------------------------------------------------------
 
 MEDIA_URL = "/media/"
@@ -313,11 +346,13 @@ MEDIA_ROOT = Path(
 # Default primary key field type
 # ---------------------------------------------------------------------
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = (
+    "django.db.models.BigAutoField"
+)
 
 
 # ---------------------------------------------------------------------
-# Guestbook configuration
+# Guestbook identity
 # ---------------------------------------------------------------------
 
 GUESTBOOK_TITLE = os.environ.get(
@@ -329,22 +364,29 @@ GUESTBOOK_TITLE = os.environ.get(
 GUESTBOOK_ACCESS_KEY = os.environ.get(
     "GUESTBOOK_ACCESS_KEY",
     "",
-)
+).strip()
 
 
-# Temporary production testing switch.
+# ---------------------------------------------------------------------
+# Guestbook event schedule
 #
-# True:
-#     Ignore the event schedule and behave as if the event is live.
+# Only the event boundaries and phase durations are configured.
 #
-# False:
-#     Use the configured event timestamps normally.
-
-GUESTBOOK_BYPASS_SCHEDULE = env_bool(
-    "GUESTBOOK_BYPASS_SCHEDULE",
-    default=False,
-)
-
+# CLOSED:
+#     moment < PRE_START
+#
+# PRE:
+#     PRE_START <= moment < STARTS_AT
+#
+# LIVE:
+#     STARTS_AT <= moment < ENDS_AT
+#
+# POST:
+#     ENDS_AT <= moment < POST_END
+#
+# ARCHIVED:
+#     POST_END <= moment
+# ---------------------------------------------------------------------
 
 GUESTBOOK_STARTS_AT = datetime(
     2026,
@@ -355,7 +397,6 @@ GUESTBOOK_STARTS_AT = datetime(
     tzinfo=STOCKHOLM_TZ,
 )
 
-
 GUESTBOOK_ENDS_AT = datetime(
     2026,
     8,
@@ -365,35 +406,79 @@ GUESTBOOK_ENDS_AT = datetime(
     tzinfo=STOCKHOLM_TZ,
 )
 
+GUESTBOOK_PRE_DURATION = timedelta(
+    days=10,
+)
+
+GUESTBOOK_POST_DURATION = timedelta(
+    hours=24,
+)
+
 
 # ---------------------------------------------------------------------
-# Guestbook lifecycle
+# Guestbook development controls
+#
+# GUESTBOOK_DEV_PHASE only has an effect while DEBUG=True.
+#
+# Supported values:
+#     closed
+#     pre
+#     live
+#     post
+#     archived
+#
+# GUESTBOOK_BYPASS_SCHEDULE forces LIVE. Keep it disabled in
+# production; it exists as a temporary deployment/testing switch.
 # ---------------------------------------------------------------------
 
-GUESTBOOK_JOIN_OPENS_AT = (
-    GUESTBOOK_STARTS_AT
-    - timedelta(hours=6)
+GUESTBOOK_DEV_PHASE = os.environ.get(
+    "GUESTBOOK_DEV_PHASE",
+    "",
+).strip().lower()
+
+
+GUESTBOOK_BYPASS_SCHEDULE = env_bool(
+    "GUESTBOOK_BYPASS_SCHEDULE",
+    default=False,
 )
 
 
-GUESTBOOK_JOIN_CLOSES_AT = (
-    GUESTBOOK_ENDS_AT
-    + timedelta(hours=12)
-)
-
-
-GUESTBOOK_ENTRIES_CLOSE_AT = (
-    GUESTBOOK_ENDS_AT
-    + timedelta(days=1)
-)
-
-
-GUESTBOOK_CLOSES_AT = (
-    GUESTBOOK_ENDS_AT
-    + timedelta(days=7)
-)
-
+# ---------------------------------------------------------------------
+# Guest access
+# ---------------------------------------------------------------------
 
 GUESTBOOK_GUEST_ACCESS_DURATION = timedelta(
-    days=7,
+    days=30,
+)
+
+
+# ---------------------------------------------------------------------
+# Upload limits
+#
+# Limits are enforced by PostUploadForm.
+# Request-level limits provide an additional outer boundary.
+# ---------------------------------------------------------------------
+
+GUESTBOOK_MAX_IMAGES_PER_POST = env_int(
+    "GUESTBOOK_MAX_IMAGES_PER_POST",
+    default=20,
+)
+
+GUESTBOOK_MAX_IMAGE_BYTES = env_int(
+    "GUESTBOOK_MAX_IMAGE_BYTES",
+    default=15 * 1024 * 1024,
+)
+
+GUESTBOOK_MAX_REQUEST_BYTES = env_int(
+    "GUESTBOOK_MAX_REQUEST_BYTES",
+    default=250 * 1024 * 1024,
+)
+
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = (
+    GUESTBOOK_MAX_REQUEST_BYTES
+)
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = (
+    5 * 1024 * 1024
 )

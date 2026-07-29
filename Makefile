@@ -1,129 +1,227 @@
-VENV := .venv
-PYTHON := $(VENV)/bin/python
-PIP := $(VENV)/bin/pip
+PYTHON := .venv/bin/python
+PIP := .venv/bin/pip
 MANAGE := $(PYTHON) manage.py
 
-DEV_ACCESS_KEY ?= local-secret-key
-RUNSERVER_ADDRESS ?= 127.0.0.1:8000
+VENV := .venv
+ENV_FILE ?= .env
 
-VALID_DEV_PHASES := pre live post closed
-REQUESTED_DEV_PHASE := $(filter $(VALID_DEV_PHASES),$(MAKECMDGOALS))
-DEV_PHASE ?= $(if $(REQUESTED_DEV_PHASE),$(firstword $(REQUESTED_DEV_PHASE)),live)
+VALID_DEV_PHASES := closed pre live post archived
+PHASE := $(word 2,$(MAKECMDGOALS))
 
 
-.PHONY: help venv install setup \
+.PHONY: help \
+	venv install setup \
 	run devrun \
-	pre live post closed \
-	check test \
+	closed pre live post archived \
+	check test verify \
 	migrate makemigrations showmigrations \
 	superuser shell devshell \
+	collectstatic \
 	clean
 
 
 help:
-	@echo "Available commands:"
 	@echo ""
-	@echo "  make setup                 Install project and run migrations"
-	@echo "  make install               Install project in editable mode"
-	@echo "  make run                   Start server without development access"
-	@echo "  make devrun                Start server in the live phase"
-	@echo "  make devrun pre            Start server in the pre phase"
-	@echo "  make devrun live           Start server in the live phase"
-	@echo "  make devrun post           Start server in the post phase"
-	@echo "  make devrun closed         Start server in the closed phase"
+	@echo "Event Guestbook"
+	@echo ""
+	@echo "Setup"
+	@echo "  make setup                 Create venv, install packages and migrate"
+	@echo "  make venv                  Create the virtual environment"
+	@echo "  make install               Install dependencies"
+	@echo ""
+	@echo "Development"
+	@echo "  make run                   Start server using configured event dates"
+	@echo "  make devrun                Start server using configured event dates"
+	@echo "  make devrun closed         Simulate CLOSED phase"
+	@echo "  make devrun pre            Simulate PRE phase"
+	@echo "  make devrun live           Simulate LIVE phase"
+	@echo "  make devrun post           Simulate POST phase"
+	@echo "  make devrun archived       Simulate ARCHIVED phase"
+	@echo ""
+	@echo "Quality"
 	@echo "  make check                 Run Django system checks"
-	@echo "  make test                  Run automated tests"
-	@echo "  make migrate               Apply database migrations"
-	@echo "  make makemigrations        Create database migrations"
-	@echo "  make showmigrations        Show migration status"
-	@echo "  make superuser             Create an admin user"
-	@echo "  make shell                 Open the Django shell"
-	@echo "  make devshell              Open a development Django shell"
-	@echo "  make clean                 Remove generated Python files"
+	@echo "  make test                  Run the test suite"
+	@echo "  make verify                Check migrations and run all tests"
 	@echo ""
-	@echo "Default development access URL:"
-	@echo "  http://$(RUNSERVER_ADDRESS)/join/$(DEV_ACCESS_KEY)/"
+	@echo "Database"
+	@echo "  make makemigrations        Create Django migrations"
+	@echo "  make migrate               Apply Django migrations"
+	@echo "  make showmigrations        Show migration status"
+	@echo ""
+	@echo "Utilities"
+	@echo "  make superuser             Create a Django administrator"
+	@echo "  make shell                 Open the Django shell"
+	@echo "  make devshell              Open a normal Python shell"
+	@echo "  make collectstatic         Collect static files"
+	@echo "  make clean                 Remove Python cache files"
+	@echo ""
+	@echo "Environment"
+	@echo "  Commands load variables from $(ENV_FILE) when it exists."
+	@echo "  Override with: make run ENV_FILE=.env.local"
+	@echo ""
 
 
 venv:
-	python3 -m venv $(VENV)
+	@test -d $(VENV) || python3 -m venv $(VENV)
+
+
+install: venv
 	$(PIP) install --upgrade pip
-
-
-install:
-	$(PIP) install -e .
+	$(PIP) install -r requirements.txt
 
 
 setup: install migrate
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(MANAGE) check
 
 
 run:
-	$(MANAGE) runserver $(RUNSERVER_ADDRESS)
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(MANAGE) runserver
 
 
 devrun:
-	@if ! echo "$(VALID_DEV_PHASES)" | grep -qw "$(DEV_PHASE)"; then \
-		echo "Invalid development phase: $(DEV_PHASE)"; \
-		echo "Choose one of: $(VALID_DEV_PHASES)"; \
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	if [ -z "$(PHASE)" ]; then \
+		$(MANAGE) runserver; \
+	elif printf '%s\n' $(VALID_DEV_PHASES) | grep -qx "$(PHASE)"; then \
+		GUESTBOOK_DEV_PHASE="$(PHASE)" \
+		$(MANAGE) runserver; \
+	else \
+		echo "Invalid phase: $(PHASE)"; \
+		echo "Valid phases: $(VALID_DEV_PHASES)"; \
 		exit 1; \
 	fi
-	@echo "Starting guestbook development server"
-	@echo "Phase:      $(DEV_PHASE)"
-	@echo "Read URL:   http://$(RUNSERVER_ADDRESS)/"
-	@echo "Access URL: http://$(RUNSERVER_ADDRESS)/join/$(DEV_ACCESS_KEY)/"
-	@echo ""
-	GUESTBOOK_ACCESS_KEY="$(DEV_ACCESS_KEY)" \
-	GUESTBOOK_DEV_PHASE="$(DEV_PHASE)" \
-		$(MANAGE) runserver $(RUNSERVER_ADDRESS)
 
 
-pre live post closed:
+closed pre live post archived:
 	@:
 
 
 check:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) check
 
 
 test:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) test
 
 
-migrate:
-	$(MANAGE) migrate
+verify:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(MANAGE) check; \
+	$(MANAGE) makemigrations --check --dry-run; \
+	$(MANAGE) test
 
 
 makemigrations:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) makemigrations
 
 
+migrate:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(MANAGE) migrate
+
+
 showmigrations:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) showmigrations
 
 
 superuser:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) createsuperuser
 
 
 shell:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
 	$(MANAGE) shell
 
 
 devshell:
-	GUESTBOOK_ACCESS_KEY="$(DEV_ACCESS_KEY)" \
-	GUESTBOOK_DEV_PHASE="$(DEV_PHASE)" \
-		$(MANAGE) shell
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(PYTHON)
+
+
+collectstatic:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	$(MANAGE) collectstatic --noinput
 
 
 clean:
-	find . -type d -name "__pycache__" \
-		-prune -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" \
-		-prune -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" \
-		-prune -exec rm -rf {} +
-	find . -type d -name ".ruff_cache" \
-		-prune -exec rm -rf {} +
-	find . -type d -name "*.egg-info" \
-		-prune -exec rm -rf {} +
-	find . -type f -name "*.py[co]" -delete
+	find . \
+		-type d \
+		-name "__pycache__" \
+		-prune \
+		-exec rm -rf {} +
+
+	find . \
+		-type f \
+		-name "*.py[co]" \
+		-delete
+
+	find . \
+		-type d \
+		-name ".pytest_cache" \
+		-prune \
+		-exec rm -rf {} +
+
+	find . \
+		-type d \
+		-name ".mypy_cache" \
+		-prune \
+		-exec rm -rf {} +

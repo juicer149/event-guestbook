@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Ladda upp bilder – {{ title }}
+{% endblock %}
+
+{% block content %}
+    <main>
+        <header>
+            <a href="{% url 'guestbook:index' %}">
+                Tillbaka
+            </a>
+
+            <h1>Ladda upp bilder</h1>
+        </header>
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+        >
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div>
+                {{ form.images.label_tag }}
+                {{ form.images }}
+
+                {% if form.images.help_text %}
+                    <p>
+                        {{ form.images.help_text }}
+                    </p>
+                {% endif %}
+
+                {% if form.images.errors %}
+                    <div role="alert">
+                        {{ form.images.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit">
+                Ladda upp
+            </button>
+        </form>
+
+        {% if configuration.allow_camera_capture %}
+            <section>
+                <h2>Ta en bild</h2>
+
+                <p>
+                    Kamerafunktionen läggs till i nästa frontendsteg.
+                </p>
+            </section>
+        {% endif %}
+    </main>
+{% endblock %}
