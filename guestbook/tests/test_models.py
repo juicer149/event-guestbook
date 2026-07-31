@@ -22,7 +22,6 @@ class PostModelTests(TestCase):
         PostImage.objects.create(
             post=post,
             image="guestbook/test.jpg",
-            position=0,
         )
 
         post.delete()
@@ -31,23 +30,44 @@ class PostModelTests(TestCase):
             PostImage.objects.exists(),
         )
 
-    def test_images_are_ordered_by_position(self) -> None:
+
+class PostImageModelTests(TestCase):
+    def test_images_are_ordered_newest_first(self) -> None:
         post = Post.objects.create()
 
-        second = PostImage.objects.create(
+        older = PostImage.objects.create(
             post=post,
-            image="guestbook/second.jpg",
-            position=1,
+            image="guestbook/older.jpg",
         )
+
+        newer = PostImage.objects.create(
+            post=post,
+            image="guestbook/newer.jpg",
+        )
+
+        self.assertEqual(
+            list(PostImage.objects.all()),
+            [
+                newer,
+                older,
+            ],
+        )
+
+    def test_post_groups_uploaded_images(self) -> None:
+        post = Post.objects.create()
 
         first = PostImage.objects.create(
             post=post,
             image="guestbook/first.jpg",
-            position=0,
         )
 
-        self.assertEqual(
-            list(post.images.all()),
+        second = PostImage.objects.create(
+            post=post,
+            image="guestbook/second.jpg",
+        )
+
+        self.assertCountEqual(
+            post.images.all(),
             [
                 first,
                 second,

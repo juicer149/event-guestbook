@@ -1,5 +1,4 @@
 from secrets import compare_digest
-from typing import Any
 
 from django.conf import settings
 from django.http import (
@@ -9,6 +8,7 @@ from django.http import (
 )
 from django.shortcuts import redirect, render
 from django.views.decorators.http import (
+    require_GET,
     require_http_methods,
 )
 
@@ -17,86 +17,46 @@ from .access import (
     guest_access_required,
     has_guest_access,
 )
-from .forms import PostUploadForm
-from .lifecycle import (
-    GuestbookState,
-    current_guestbook_state,
+from .forms import (
+    DEFAULT_MAX_IMAGE_BYTES,
+    DEFAULT_MAX_IMAGES,
+    PostUploadForm,
 )
-from .models import Post
+from .lifecycle import current_guestbook_state
+from .models import PostImage
 from .posting import create_post
 
 
-def require_accessible_guestbook(
-    state: GuestbookState,
-) -> None:
-    """
-    Hide the guestbook when the current phase is inaccessible.
-    """
-    if not state.configuration.is_accessible:
-        raise Http404
-
-
-def require_uploads_allowed(
-    state: GuestbookState,
-) -> None:
-    """
-    Hide the upload endpoint when uploads are disabled.
-    """
-    require_accessible_guestbook(state)
-
-    if not state.configuration.allow_uploads:
-        raise Http404
-
-
-def upload_form_options(
-    state: GuestbookState,
-) -> dict[str, Any]:
-    """
-    Build phase- and settings-dependent PostUploadForm options.
-    """
-    return {
-        "allow_multiple_images": (
-            state.configuration.allow_multiple_images
-        ),
-        "max_images": (
-            settings.GUESTBOOK_MAX_IMAGES_PER_POST
-        ),
-        "max_image_bytes": (
-            settings.GUESTBOOK_MAX_IMAGE_BYTES
-        ),
-    }
-
-
-@require_http_methods(["GET"])
+@require_GET
 def index(
     request: HttpRequest,
 ) -> HttpResponse:
     """
-    Render the current guestbook page.
+    Render the shared event photo feed.
 
-    Posts are only queried when the active phase exposes the feed.
+    The lifecycle configuration decides whether the guestbook and
+    feed are available. Guest access is checked independently through
+    the browser session.
     """
     state = current_guestbook_state()
 
-    require_accessible_guestbook(state)
+    if not state.configuration.is_accessible:
+        raise Http404
 
     if not has_guest_access(request):
         raise Http404
 
-    posts = Post.objects.none()
-
     if state.configuration.show_feed:
-        posts = (
-            Post.objects
-            .prefetch_related("images")
-            .order_by("-created_at")
-        )
+        images = PostImage.objects.all()
+    else:
+        images = PostImage.objects.none()
 
     context = {
         "title": settings.GUESTBOOK_TITLE,
-        "posts": posts,
-        "phase": state.phase,
+        "phase": state.phase.value,
         "configuration": state.configuration,
+        "images": images,
+        "image_count": images.count(),
     }
 
     return render(
@@ -106,27 +66,23 @@ def index(
     )
 
 
-@require_http_methods(["GET"])
+@require_GET
 def join(
     request: HttpRequest,
     access_key: str,
 ) -> HttpResponse:
     """
-    Redeem the shared event access key for the current browser.
+    Grant guest access when the event and shared key allow it.
 
-    A successful redemption stores guest access in the browser's
-    Django session.
+    A successful join stores guest access in the Django session and
+    redirects to the photo feed.
     """
     state = current_guestbook_state()
-
-    require_accessible_guestbook(state)
 
     if not state.configuration.allow_join:
         raise Http404
 
-    configured_key = (
-        settings.GUESTBOOK_ACCESS_KEY
-    )
+    configured_key = settings.GUESTBOOK_ACCESS_KEY
 
     if not configured_key:
         raise Http404
@@ -144,21 +100,47 @@ def join(
     )
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(
+    [
+        "GET",
+        "POST",
+    ]
+)
 @guest_access_required
 def upload_photos(
     request: HttpRequest,
 ) -> HttpResponse:
     """
-    Render and process the photo upload form.
+    Render and process one multi-image upload action.
+
+    The current phase controls whether uploads, multiple selection,
+    and camera capture are available. The form validates the files,
+    while create_post performs the application use case.
     """
     state = current_guestbook_state()
+    configuration = state.configuration
 
-    require_uploads_allowed(state)
+    if not configuration.is_accessible:
+        raise Http404
 
-    form_options = upload_form_options(
-        state,
-    )
+    if not configuration.allow_uploads:
+        raise Http404
+
+    form_options = {
+        "allow_multiple_images": (
+            configuration.allow_multiple_images
+        ),
+        "max_images": getattr(
+            settings,
+            "GUESTBOOK_MAX_IMAGES",
+            DEFAULT_MAX_IMAGES,
+        ),
+        "max_image_bytes": getattr(
+            settings,
+            "GUESTBOOK_MAX_IMAGE_BYTES",
+            DEFAULT_MAX_IMAGE_BYTES,
+        ),
+    }
 
     if request.method == "POST":
         form = PostUploadForm(
@@ -182,9 +164,10 @@ def upload_photos(
 
     context = {
         "title": settings.GUESTBOOK_TITLE,
+        "phase": state.phase.value,
+        "configuration": configuration,
         "form": form,
-        "phase": state.phase,
-        "configuration": state.configuration,
+        "max_images": form_options["max_images"],
     }
 
     return render(

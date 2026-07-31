@@ -5,8 +5,8 @@ class Post(models.Model):
     """
     Represent one upload action.
 
-    A post contains one or more images selected and uploaded
-    together by a guest.
+    A post groups the images that were uploaded together. The group
+    does not need to be visible in the public photo feed.
     """
 
     created_at = models.DateTimeField(
@@ -15,7 +15,7 @@ class Post(models.Model):
     )
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-created_at", "-id"]
 
     def __str__(self) -> str:
         return f"Post {self.pk}"
@@ -23,10 +23,11 @@ class Post(models.Model):
 
 class PostImage(models.Model):
     """
-    Represent one image belonging to a post.
+    Represent one image in the shared event feed.
 
-    Position preserves the order in which the guest selected
-    the images.
+    The original image is the permanent source of truth. The
+    thumbnail is a derived asset that may be regenerated from the
+    original.
     """
 
     post = models.ForeignKey(
@@ -36,30 +37,23 @@ class PostImage(models.Model):
     )
 
     image = models.ImageField(
-        upload_to="guestbook/%Y/%m/%d/",
+        upload_to="guestbook/originals/%Y/%m/%d/",
     )
 
-    position = models.PositiveIntegerField(
-        default=0,
+    thumbnail = models.ImageField(
+        upload_to="guestbook/thumbnails/%Y/%m/%d/",
+        blank=True,
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
+        db_index=True,
     )
 
     class Meta:
         ordering = [
-            "position",
-            "id",
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=[
-                    "post",
-                    "position",
-                ],
-                name="unique_post_image_position",
-            ),
+            "-created_at",
+            "-id",
         ]
 
     def __str__(self) -> str:

@@ -26,6 +26,7 @@ TEST_MEDIA_ROOT = Path(
     )
 )
 
+
 def state_for(
     phase: GuestbookPhase,
 ) -> GuestbookState:
@@ -93,8 +94,18 @@ def valid_image(
     GUESTBOOK_MAX_IMAGE_BYTES=(
         15 * 1024 * 1024
     ),
+    MEDIA_ROOT=TEST_MEDIA_ROOT,
 )
 class GuestbookViewTests(TestCase):
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+
+        shutil.rmtree(
+            TEST_MEDIA_ROOT,
+            ignore_errors=True,
+        )
+
     def join_url(
         self,
         key: str = "test-secret-key",
@@ -297,8 +308,13 @@ class GuestbookViewTests(TestCase):
         )
 
         self.assertEqual(
-            list(response.context["posts"]),
+            list(response.context["images"]),
             [],
+        )
+
+        self.assertEqual(
+            response.context["image_count"],
+            0,
         )
 
         self.assertFalse(
@@ -307,15 +323,14 @@ class GuestbookViewTests(TestCase):
             ].show_feed,
         )
 
-    def test_live_page_contains_posts(self) -> None:
+    def test_live_page_contains_images(self) -> None:
         self.grant_session_access()
 
         post = Post.objects.create()
 
-        PostImage.objects.create(
+        image = PostImage.objects.create(
             post=post,
             image="guestbook/test-live.jpg",
-            position=0,
         )
 
         with patch(
@@ -334,8 +349,13 @@ class GuestbookViewTests(TestCase):
         )
 
         self.assertEqual(
-            list(response.context["posts"]),
-            [post],
+            list(response.context["images"]),
+            [image],
+        )
+
+        self.assertEqual(
+            response.context["image_count"],
+            1,
         )
 
         self.assertTrue(
@@ -344,12 +364,17 @@ class GuestbookViewTests(TestCase):
             ].show_feed,
         )
 
-    def test_archived_page_contains_posts(
+    def test_archived_page_contains_images(
         self,
     ) -> None:
         self.grant_session_access()
 
         post = Post.objects.create()
+
+        image = PostImage.objects.create(
+            post=post,
+            image="guestbook/test-archived.jpg",
+        )
 
         with patch(
             "guestbook.views.current_guestbook_state",
@@ -367,8 +392,13 @@ class GuestbookViewTests(TestCase):
         )
 
         self.assertEqual(
-            list(response.context["posts"]),
-            [post],
+            list(response.context["images"]),
+            [image],
+        )
+
+        self.assertEqual(
+            response.context["image_count"],
+            1,
         )
 
         self.assertFalse(
@@ -521,14 +551,23 @@ class GuestbookViewTests(TestCase):
             1,
         )
 
+        post = Post.objects.get()
         image = PostImage.objects.get()
 
         self.assertEqual(
-            image.position,
-            0,
+            image.post,
+            post,
         )
 
-    def test_multiple_images_preserve_order(
+        self.assertTrue(
+            image.image.name,
+        )
+
+        self.assertTrue(
+            image.thumbnail.name,
+        )
+
+    def test_multiple_images_create_one_post_with_multiple_images(
         self,
     ) -> None:
         self.grant_session_access()
@@ -553,31 +592,34 @@ class GuestbookViewTests(TestCase):
                 },
             )
 
-        self.assertEqual(
-            response.status_code,
-            302,
-        )
-
-        images = list(
-            PostImage.objects.order_by(
-                "position",
-            )
+        self.assertRedirects(
+            response,
+            self.index_url(),
+            fetch_redirect_response=False,
         )
 
         self.assertEqual(
-            len(images),
+            Post.objects.count(),
+            1,
+        )
+
+        self.assertEqual(
+            PostImage.objects.count(),
             2,
         )
 
+        post = Post.objects.get()
+
         self.assertEqual(
-            [
-                image.position
-                for image in images
-            ],
-            [
-                0,
-                1,
-            ],
+            post.images.count(),
+            2,
+        )
+
+        self.assertTrue(
+            all(
+                image.thumbnail.name
+                for image in post.images.all()
+            )
         )
 
     def test_invalid_upload_does_not_create_post(

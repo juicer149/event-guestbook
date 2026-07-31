@@ -30,43 +30,62 @@
                 </p>
             {% endif %}
 
-            {% if configuration.allow_uploads %}
-                <a href="{% url 'guestbook:upload_photos' %}">
-                    Ladda upp bilder
-                </a>
+            {% if configuration.show_feed %}
+                <p>
+                    {{ image_count }}
+                    {% if image_count == 1 %}
+                        bild
+                    {% else %}
+                        bilder
+                    {% endif %}
+                </p>
             {% endif %}
         </header>
 
         {% if configuration.show_feed %}
-            <section aria-labelledby="feed-heading">
-                <h2 id="feed-heading">
-                    Bilder från festen
-                </h2>
-
-                {% for post in posts %}
-                    <article>
-                        <div>
-                            {% for post_image in post.images.all %}
-                                <img
-                                    src="{{ post_image.image.url }}"
-                                    alt=""
-                                    loading="lazy"
-                                >
-                            {% endfor %}
-                        </div>
-
-                        <time
-                            datetime="{{ post.created_at|date:'c' }}"
-                        >
-                            {{ post.created_at|date:"j F Y, H:i" }}
-                        </time>
-                    </article>
+            <section
+                class="photo-feed"
+                aria-label="Bilder från festen"
+            >
+                {% for image in images %}
+                    <button
+                        class="photo-card"
+                        type="button"
+                        data-full-image="{{ image.image.url }}"
+                        aria-label="Öppna bild"
+                    >
+                        {% if image.thumbnail %}
+                            <img
+                                src="{{ image.thumbnail.url }}"
+                                alt=""
+                                loading="lazy"
+                            >
+                        {% else %}
+                            <img
+                                src="{{ image.image.url }}"
+                                alt=""
+                                loading="lazy"
+                            >
+                        {% endif %}
+                    </button>
                 {% empty %}
-                    <p>
-                        Inga bilder har laddats upp ännu.
-                    </p>
+                    <div class="empty-feed">
+                        <p>
+                            Inga bilder har lagts till ännu.
+                        </p>
+                    </div>
                 {% endfor %}
             </section>
+        {% endif %}
+
+        {% if configuration.allow_uploads %}
+            <div class="feed-action">
+                <a
+                    href="{% url 'guestbook:upload_photos' %}"
+                >
+                    Lägg till bilder
+                </a>
+            </div>
         {% endif %}
     </main>
 {% endblock %}
