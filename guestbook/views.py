@@ -132,7 +132,7 @@ def upload_photos(
         ),
         "max_images": getattr(
             settings,
-            "GUESTBOOK_MAX_IMAGES",
+            "GUESTBOOK_MAX_IMAGES_PER_POST",
             DEFAULT_MAX_IMAGES,
         ),
         "max_image_bytes": getattr(

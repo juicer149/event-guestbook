@@ -5,39 +5,35 @@
 {% endblock %}
 
 {% block body %}
-    <main>
-        <header>
-            <h1>{{ title }}</h1>
+    <main class="album-page">
+        <header class="album-header">
+            <div class="event-heading">
+                <p class="event-label">
+                    SIMON 30
+                </p>
 
-            {% if phase == "pre" %}
-                <p>
-                    Här kommer festens bilder att samlas.
-                    Uppladdningen öppnar när festen börjar.
-                </p>
-            {% elif phase == "live" %}
-                <p>
-                    Festen pågår – dela dina bilder från kvällen.
-                </p>
-            {% elif phase == "post" %}
-                <p>
-                    Festen är över, men du kan fortfarande
-                    ladda upp bilder från ditt galleri.
-                </p>
-            {% elif phase == "archived" %}
-                <p>
-                    Uppladdningen är stängd, men alla bilder
-                    finns kvar här.
-                </p>
-            {% endif %}
+                <h1 class="event-title">
+                    {{ title }}
+                </h1>
+
+                <div
+                    class="event-divider"
+                    aria-hidden="true"
+                ></div>
+            </div>
 
             {% if configuration.show_feed %}
-                <p>
+                <p class="image-count">
                     {{ image_count }}
                     {% if image_count == 1 %}
                         bild
                     {% else %}
                         bilder
                     {% endif %}
+                </p>
+            {% elif phase == "pre" %}
+                <p class="phase-message">
+                    Albumet öppnar när festen börjar.
                 </p>
             {% endif %}
         </header>
@@ -59,19 +55,26 @@
                                 src="{{ image.thumbnail.url }}"
                                 alt=""
                                 loading="lazy"
+                                decoding="async"
                             >
                         {% else %}
                             <img
                                 src="{{ image.image.url }}"
                                 alt=""
                                 loading="lazy"
+                                decoding="async"
                             >
                         {% endif %}
                     </button>
                 {% empty %}
                     <div class="empty-feed">
-                        <p>
-                            Inga bilder har lagts till ännu.
+                        <p class="empty-feed__title">
+                            Inga bilder ännu
+                        </p>
+
+                        <p class="empty-feed__text">
+                            Bli först med att lägga till ett
+                            ögonblick från festen.
                         </p>
                     </div>
                 {% endfor %}
@@ -81,9 +84,21 @@
         {% if configuration.allow_uploads %}
             <div class="feed-action">
                 <a
+                    class="feed-action__button"
                     href="{% url 'guestbook:upload_photos' %}"
                 >
-                    Lägg till bilder
+                    <svg
+                        class="feed-action__icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+
+                    <span>
+                        Lägg till bilder
+                    </span>
                 </a>
             </div>
         {% endif %}

@@ -4,14 +4,29 @@
     Ladda upp bilder – {{ title }}
 {% endblock %}
 
-{% block content %}
+{% block body %}
     <main>
         <header>
             <a href="{% url 'guestbook:index' %}">
-                Tillbaka
+                ← Tillbaka till albumet
             </a>
 
-            <h1>Ladda upp bilder</h1>
+            <h1>Lägg till bilder</h1>
+
+            <p>
+                Välj upp till {{ max_images }} bilder.
+            </p>
+
+            {% if configuration.allow_camera_capture %}
+                <p>
+                    Du kan välja bilder från telefonen eller
+                    ta nya bilder med kameran.
+                </p>
+            {% else %}
+                <p>
+                    Välj bilder från telefonens bildbibliotek.
+                </p>
+            {% endif %}
         </header>
 
         <form
@@ -44,18 +59,8 @@
             </div>
 
             <button type="submit">
-                Ladda upp
+                Ladda upp bilder
             </button>
         </form>
-
-        {% if configuration.allow_camera_capture %}
-            <section>
-                <h2>Ta en bild</h2>
-
-                <p>
-                    Kamerafunktionen läggs till i nästa frontendsteg.
-                </p>
-            </section>
-        {% endif %}
     </main>
 {% endblock %}

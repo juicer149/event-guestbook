@@ -357,7 +357,7 @@ DEFAULT_AUTO_FIELD = (
 
 GUESTBOOK_TITLE = os.environ.get(
     "GUESTBOOK_TITLE",
-    "Simons 30-årsfest",
+    "White Party",
 )
 
 
