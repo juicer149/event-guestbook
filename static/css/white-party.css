@@ -7,6 +7,7 @@
     --gold: #c7b08a;
     --button-background: #22201e;
     --button-text: #fafaf8;
+    --error: #9c2f2f;
 
     --page-width: 32rem;
     --page-padding: 0.8125rem;
@@ -44,9 +45,17 @@ a {
     -webkit-tap-highlight-color: transparent;
 }
 
+button {
+    font: inherit;
+}
+
 img {
     max-width: 100%;
 }
+
+/* ------------------------------------------------------------------
+   Album feed
+   ------------------------------------------------------------------ */
 
 .album-page {
     width: min(100%, var(--page-width));
@@ -124,10 +133,6 @@ img {
         var(--page-padding)
         1rem;
 
-    /*
-     * A column layout gives us a lightweight masonry feed.
-     * Images retain their natural proportions and flow vertically.
-     */
     column-count: 3;
     column-gap: var(--feed-gap);
 }
@@ -170,10 +175,6 @@ img {
     width: 100%;
     padding: 3rem 1rem;
     text-align: center;
-
-    /*
-     * Multi-column layout otherwise treats this as another tile.
-     */
     column-span: all;
 }
 
@@ -250,6 +251,7 @@ img {
     fill: none;
     stroke: var(--gold);
     stroke-linecap: round;
+    stroke-linejoin: round;
     stroke-width: 2.5;
 }
 
@@ -263,9 +265,371 @@ img {
     box-shadow: 0 0.25rem 0.35rem rgb(0 0 0 / 12%);
 }
 
-/*
- * Very narrow phones need slightly smaller gutters and type.
- */
+/* ------------------------------------------------------------------
+   Upload page
+   ------------------------------------------------------------------ */
+
+.upload-page {
+    width: min(100%, var(--page-width));
+    min-height: 100dvh;
+    margin: 0 auto;
+    background: var(--surface);
+}
+
+.upload-form {
+    min-height: 100dvh;
+    padding-bottom:
+        calc(
+            12.5rem +
+            env(safe-area-inset-bottom)
+        );
+}
+
+.upload-header {
+    min-height: 13rem;
+    padding:
+        calc(0.75rem + env(safe-area-inset-top))
+        0.625rem
+        1rem;
+}
+
+.upload-back {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--gold);
+    text-decoration: none;
+}
+
+.upload-back svg {
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.upload-back:focus-visible {
+    outline: 3px solid var(--text-primary);
+    outline-offset: 2px;
+}
+
+.upload-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.25rem 0.625rem 0;
+    text-align: center;
+}
+
+.upload-heading h1 {
+    margin: 0;
+    color: var(--text-primary);
+    font-family:
+        "Instrument Serif",
+        Georgia,
+        serif;
+    font-size: clamp(2.5rem, 11vw, 3rem);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.upload-heading p {
+    max-width: 23rem;
+    margin: 0;
+    color: var(--text-label);
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.upload-selection {
+    padding: 0 2.0625rem 2rem;
+}
+
+.selection-toolbar {
+    display: flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.selection-count {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.selection-clear {
+    min-width: 3.5rem;
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.selection-clear:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.selection-message {
+    margin: 0 0 0.75rem;
+    color: var(--error);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.preview-item {
+    position: relative;
+    overflow: visible;
+    aspect-ratio: 1;
+}
+
+.preview-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--gold);
+    border-radius: 0.75rem;
+    object-fit: cover;
+}
+
+.preview-remove {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    padding: 0;
+
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--button-background);
+    color: var(--button-text);
+    cursor: pointer;
+}
+
+.preview-remove svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 2;
+}
+
+.preview-remove:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.upload-empty-state {
+    display: flex;
+    min-height: 19rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.upload-empty-state[hidden] {
+    display: none;
+}
+
+.upload-empty-state svg {
+    width: 6.5rem;
+    height: 6.5rem;
+    padding: 1.5rem;
+
+    border: 1px solid rgb(199 176 138 / 45%);
+    border-radius: 50%;
+
+    fill: none;
+    stroke: var(--text-label);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.5;
+}
+
+.upload-empty-state p {
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+.form-errors {
+    margin: 0 2.0625rem 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid rgb(156 47 47 / 35%);
+    border-radius: 0.75rem;
+    background: rgb(156 47 47 / 6%);
+    color: var(--error);
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.form-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.file-input-native {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.upload-actions {
+    position: fixed;
+    z-index: 20;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    display: grid;
+    gap: 0.625rem;
+    padding:
+        0.75rem
+        1.5rem
+        calc(
+            0.75rem +
+            env(safe-area-inset-bottom)
+        );
+
+    background:
+        linear-gradient(
+            to top,
+            var(--surface) 84%,
+            rgb(255 255 255 / 0%)
+        );
+}
+
+.upload-submit,
+.picker-button {
+    border: 2px solid var(--gold);
+    border-radius: 1.25rem;
+    background: var(--button-background);
+    box-shadow: 0 0.5rem 0.5rem rgb(0 0 0 / 12%);
+    color: var(--button-text);
+    cursor: pointer;
+}
+
+.upload-submit {
+    display: flex;
+    width: min(
+        calc(100vw - 3rem),
+        calc(var(--page-width) - 3rem)
+    );
+    min-height: 3.5rem;
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+.upload-submit svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: var(--gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.upload-submit:disabled {
+    border-color: #cfc9c1;
+    background: #dedbd6;
+    box-shadow: none;
+    color: #908a84;
+    cursor: not-allowed;
+}
+
+.upload-submit:disabled svg {
+    stroke: #908a84;
+}
+
+.upload-picker-actions {
+    display: grid;
+    width: min(
+        calc(100vw - 3rem),
+        calc(var(--page-width) - 3rem)
+    );
+    margin: 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+.upload-picker-actions--single {
+    grid-template-columns: 1fr;
+}
+
+.picker-button {
+    display: flex;
+    min-height: 3.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.picker-button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: var(--gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.upload-submit:focus-visible,
+.picker-button:focus-visible {
+    outline: 3px solid var(--text-primary);
+    outline-offset: 3px;
+}
+
+.upload-submit:not(:disabled):active,
+.picker-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 0.25rem 0.35rem rgb(0 0 0 / 12%);
+}
+
+.is-uploading .preview-remove {
+    display: none;
+}
+
+/* ------------------------------------------------------------------
+   Responsive adjustments
+   ------------------------------------------------------------------ */
+
 @media (max-width: 360px) {
     :root {
         --page-padding: 0.5rem;
@@ -276,25 +640,34 @@ img {
         font-size: 3.4rem;
     }
 
-    .feed-action {
+    .feed-action,
+    .upload-actions {
         padding-right: 1rem;
         padding-left: 1rem;
     }
 
-    .feed-action__button {
+    .feed-action__button,
+    .upload-submit,
+    .upload-picker-actions {
         width: min(
             calc(100vw - 2rem),
             calc(var(--page-width) - 2rem)
         );
     }
+
+    .upload-selection {
+        padding-right: 1.25rem;
+        padding-left: 1.25rem;
+    }
+
+    .preview-grid {
+        gap: 0.375rem;
+    }
 }
 
-/*
- * The project is mobile-focused, but this prevents the interface
- * from looking stretched when opened on a desktop during development.
- */
 @media (min-width: 33rem) {
-    .album-page {
+    .album-page,
+    .upload-page {
         border-right: 1px solid rgb(199 176 138 / 30%);
         border-left: 1px solid rgb(199 176 138 / 30%);
     }
@@ -302,7 +675,9 @@ img {
 
 @media (prefers-reduced-motion: reduce) {
     .photo-card,
-    .feed-action__button {
+    .feed-action__button,
+    .upload-submit,
+    .picker-button {
         transition: none;
     }
 }
