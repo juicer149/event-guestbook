@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     {{ title }}
@@ -40,15 +41,23 @@
 
         {% if configuration.show_feed %}
             <section
+                id="guestbook-gallery"
                 class="photo-feed"
                 aria-label="Bilder från festen"
             >
                 {% for image in images %}
-                    <button
+                    <a
                         class="photo-card"
-                        type="button"
-                        data-full-image="{{ image.image.url }}"
-                        aria-label="Öppna bild"
+                        href="{{ image.image.url }}"
+                        data-gallery-image
+                        data-gallery-trigger
+                        data-gallery-id="guestbook-gallery"
+                        data-alt="Bild {{ forloop.counter }}"
+                        data-caption=""
+                        aria-label="
+                            Öppna bild {{ forloop.counter }}
+                            av {{ image_count }}
+                        "
                     >
                         {% if image.thumbnail %}
                             <img
@@ -65,7 +74,7 @@
                                 decoding="async"
                             >
                         {% endif %}
-                    </button>
+                    </a>
                 {% empty %}
                     <div class="empty-feed">
                         <p class="empty-feed__title">
@@ -103,4 +112,122 @@
             </div>
         {% endif %}
     </main>
+
+    <div
+        class="gallery-lightbox"
+        data-gallery-lightbox
+        aria-hidden="true"
+        hidden
+    >
+        <button
+            class="gallery-lightbox__backdrop"
+            type="button"
+            data-gallery-close
+            aria-label="Stäng bildvisningen"
+        ></button>
+
+        <section
+            class="gallery-lightbox__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Bildvisning"
+        >
+            <header class="gallery-lightbox__header">
+                <button
+                    class="gallery-lightbox__close"
+                    type="button"
+                    data-gallery-close
+                    aria-label="Stäng bildvisningen"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path d="M6 6l12 12"></path>
+                        <path d="M18 6L6 18"></path>
+                    </svg>
+                </button>
+            </header>
+
+            <div class="gallery-lightbox__stage">
+                <div class="gallery-lightbox__image-container">
+                    <img
+                        class="gallery-lightbox__image"
+                        src=""
+                        alt=""
+                    >
+                </div>
+            </div>
+
+            <footer class="gallery-lightbox__footer">
+                <p
+                    class="gallery-lightbox__caption"
+                    data-gallery-caption
+                    hidden
+                ></p>
+
+                <div class="gallery-lightbox__controls">
+                    <button
+                        class="gallery-lightbox__nav"
+                        type="button"
+                        data-gallery-prev
+                        aria-label="Föregående bild"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+
+                    <span
+                        class="gallery-lightbox__count"
+                        data-gallery-count
+                        aria-live="polite"
+                    ></span>
+
+                    <button
+                        class="gallery-lightbox__nav"
+                        type="button"
+                        data-gallery-next
+                        aria-label="Nästa bild"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path d="M9 6l6 6-6 6"></path>
+                        </svg>
+                    </button>
+
+                    <a
+                        class="gallery-lightbox__download"
+                        data-gallery-download
+                        download
+                        aria-label="Ladda ner originalbilden"
+                        title="Ladda ner originalbilden"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path d="M12 4v11"></path>
+                            <path d="M7 11l5 5 5-5"></path>
+                            <path d="M5 20h14"></path>
+                        </svg>
+
+                        <span>
+                            Ladda ner
+                        </span>
+                    </a>
+                </div>
+            </footer>
+        </section>
+    </div>
+
+    <script
+        src="{% static 'js/gallery-lightbox.js' %}"
+        defer
+    ></script>
 {% endblock %}
