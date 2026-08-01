@@ -10,6 +10,12 @@
     const image = lightbox.querySelector(
         ".gallery-lightbox__image"
     );
+    const loader = lightbox.querySelector(
+        "[data-gallery-loader]"
+    );
+    const errorMessage = lightbox.querySelector(
+        "[data-gallery-error]"
+    );
     const caption = lightbox.querySelector(
         "[data-gallery-caption]"
     );
@@ -33,6 +39,9 @@
     let currentIndex = 0;
     let previousFocus = null;
     let touchStartX = null;
+    let requestedSource = "";
+
+    const preloadedSources = new Set();
 
     function readGallery(galleryId) {
         const gallery = document.getElementById(galleryId);
@@ -55,6 +64,79 @@
         });
     }
 
+    function showLoadingState() {
+        loader.hidden = false;
+        errorMessage.hidden = true;
+
+        image.classList.add("is-loading");
+
+        lightbox.setAttribute(
+            "aria-busy",
+            "true"
+        );
+    }
+
+    function showLoadedState() {
+        loader.hidden = true;
+        errorMessage.hidden = true;
+
+        image.classList.remove("is-loading");
+
+        lightbox.setAttribute(
+            "aria-busy",
+            "false"
+        );
+    }
+
+    function showErrorState() {
+        loader.hidden = true;
+        errorMessage.hidden = false;
+
+        image.classList.add("is-loading");
+
+        lightbox.setAttribute(
+            "aria-busy",
+            "false"
+        );
+    }
+
+    function preloadImage(source) {
+        if (
+            !source ||
+            preloadedSources.has(source)
+        ) {
+            return;
+        }
+
+        preloadedSources.add(source);
+
+        const preload = new Image();
+
+        preload.src = source;
+    }
+
+    function preloadAdjacentImages() {
+        if (images.length < 2) {
+            return;
+        }
+
+        const previousIndex = (
+            currentIndex - 1 + images.length
+        ) % images.length;
+
+        const nextIndex = (
+            currentIndex + 1
+        ) % images.length;
+
+        preloadImage(
+            images[previousIndex].src
+        );
+
+        preloadImage(
+            images[nextIndex].src
+        );
+    }
+
     function showImage(index) {
         if (images.length === 0) {
             return;
@@ -66,8 +148,12 @@
 
         const currentImage = images[currentIndex];
 
-        image.src = currentImage.src;
+        requestedSource = currentImage.src;
+
+        showLoadingState();
+
         image.alt = currentImage.alt;
+        image.src = currentImage.src;
 
         caption.textContent = currentImage.caption;
         caption.hidden = !currentImage.caption;
@@ -82,6 +168,19 @@
 
         previousButton.hidden = !hasMultipleImages;
         nextButton.hidden = !hasMultipleImages;
+
+        /*
+         * A cached image may already be complete when src is assigned.
+         * The naturalWidth check distinguishes a successfully decoded
+         * image from a failed request.
+         */
+        if (
+            image.complete &&
+            image.naturalWidth > 0
+        ) {
+            showLoadedState();
+            preloadAdjacentImages();
+        }
     }
 
     function openLightbox(trigger) {
@@ -126,13 +225,23 @@
             "aria-hidden",
             "true"
         );
+        lightbox.setAttribute(
+            "aria-busy",
+            "false"
+        );
 
         document.body.classList.remove(
             "lightbox-open"
         );
 
-        image.src = "";
+        requestedSource = "";
+
+        image.removeAttribute("src");
         image.alt = "";
+        image.classList.remove("is-loading");
+
+        loader.hidden = true;
+        errorMessage.hidden = true;
 
         caption.textContent = "";
         caption.hidden = true;
@@ -158,6 +267,29 @@
     function showNextImage() {
         showImage(currentIndex + 1);
     }
+
+    image.addEventListener(
+        "load",
+        function () {
+            if (image.src !== requestedSource) {
+                return;
+            }
+
+            showLoadedState();
+            preloadAdjacentImages();
+        }
+    );
+
+    image.addEventListener(
+        "error",
+        function () {
+            if (image.src !== requestedSource) {
+                return;
+            }
+
+            showErrorState();
+        }
+    );
 
     document.addEventListener(
         "click",
