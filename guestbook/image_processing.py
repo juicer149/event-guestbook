@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from io import BytesIO
-from pathlib import Path
 from typing import BinaryIO
 from uuid import uuid4
 
@@ -55,16 +54,7 @@ def process_image(
 
     image_file.seek(0)
 
-    original_name = getattr(
-        image_file,
-        "name",
-        "image",
-    )
-
-    thumbnail_name = (
-        f"{Path(original_name).stem}-"
-        f"{uuid4().hex}.webp"
-    )
+    thumbnail_name = f"{uuid4().hex}.webp"
 
     return ProcessedImage(
         thumbnail=ContentFile(

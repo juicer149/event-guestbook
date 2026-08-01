@@ -38,10 +38,12 @@ class PostImage(models.Model):
 
     image = models.ImageField(
         upload_to="guestbook/originals/%Y/%m/%d/",
+        max_length=255,
     )
 
     thumbnail = models.ImageField(
         upload_to="guestbook/thumbnails/%Y/%m/%d/",
+        max_length=255,
         blank=True,
     )
 
