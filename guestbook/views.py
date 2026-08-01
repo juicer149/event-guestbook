@@ -185,8 +185,20 @@ def upload_photos(
                 "Upload form validation succeeded."
             )
 
-            create_post(
-                form.cleaned_data["images"],
+            try:
+                post = create_post(
+                    form.cleaned_data["images"],
+                )
+            except Exception:
+                logger.exception(
+                    "Failed while creating post from "
+                    "uploaded images."
+                )
+                raise
+
+            logger.warning(
+                "Upload completed successfully. Post ID: %s",
+                post.pk,
             )
 
             return redirect(
