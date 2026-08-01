@@ -1,8 +1,6 @@
-import logging
 from secrets import compare_digest
 
 from django.conf import settings
-from django.core.exceptions import SuspiciousOperation
 from django.http import (
     Http404,
     HttpRequest,
@@ -27,9 +25,6 @@ from .forms import (
 from .lifecycle import current_guestbook_state
 from .models import PostImage
 from .posting import create_post
-
-
-logger = logging.getLogger(__name__)
 
 
 @require_GET
@@ -148,32 +143,6 @@ def upload_photos(
     }
 
     if request.method == "POST":
-        try:
-            uploaded_images = request.FILES.getlist(
-                "images",
-            )
-        except SuspiciousOperation:
-            logger.exception(
-                "Upload request was rejected while parsing "
-                "multipart form data."
-            )
-            raise
-
-        logger.warning(
-            "Received upload request with %s file(s): %s",
-            len(uploaded_images),
-            [
-                {
-                    "name": uploaded_image.name,
-                    "content_type": (
-                        uploaded_image.content_type
-                    ),
-                    "size": uploaded_image.size,
-                }
-                for uploaded_image in uploaded_images
-            ],
-        )
-
         form = PostUploadForm(
             request.POST,
             request.FILES,
@@ -181,34 +150,13 @@ def upload_photos(
         )
 
         if form.is_valid():
-            logger.warning(
-                "Upload form validation succeeded."
-            )
-
-            try:
-                post = create_post(
-                    form.cleaned_data["images"],
-                )
-            except Exception:
-                logger.exception(
-                    "Failed while creating post from "
-                    "uploaded images."
-                )
-                raise
-
-            logger.warning(
-                "Upload completed successfully. Post ID: %s",
-                post.pk,
+            create_post(
+                form.cleaned_data["images"],
             )
 
             return redirect(
                 "guestbook:index",
             )
-
-        logger.warning(
-            "Upload form validation failed: %s",
-            form.errors.as_json(),
-        )
     else:
         form = PostUploadForm(
             **form_options,
