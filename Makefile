@@ -5,13 +5,17 @@ MANAGE := $(PYTHON) manage.py
 VENV := .venv
 ENV_FILE ?= .env
 
+# 0.0.0.0 makes the server reachable from Windows when running in WSL2.
+HOST := 0.0.0.0:8000
+DEMO_ACCESS_KEY := demo
+
 VALID_DEV_PHASES := closed pre live post archived
 PHASE := $(word 2,$(MAKECMDGOALS))
 
 
 .PHONY: help \
 	venv install setup \
-	run devrun \
+	run devrun demo \
 	closed pre live post archived \
 	check test verify \
 	migrate makemigrations showmigrations \
@@ -28,6 +32,10 @@ help:
 	@echo "  make setup                 Create venv, install packages and migrate"
 	@echo "  make venv                  Create the virtual environment"
 	@echo "  make install               Install dependencies"
+	@echo ""
+	@echo "Demo"
+	@echo "  make demo                  Reset LOCAL data, create demo photos and start in LIVE"
+	@echo "                             Then open http://127.0.0.1:8000/join/$(DEMO_ACCESS_KEY)/"
 	@echo ""
 	@echo "Development"
 	@echo "  make run                   Start server using configured event dates"
@@ -85,7 +93,7 @@ run:
 		. "$(ENV_FILE)"; \
 	fi; \
 	set +a; \
-	$(MANAGE) runserver
+	$(MANAGE) runserver $(HOST)
 
 
 devrun:
@@ -95,15 +103,41 @@ devrun:
 	fi; \
 	set +a; \
 	if [ -z "$(PHASE)" ]; then \
-		$(MANAGE) runserver; \
+		$(MANAGE) runserver $(HOST); \
 	elif printf '%s\n' $(VALID_DEV_PHASES) | grep -qx "$(PHASE)"; then \
 		GUESTBOOK_DEV_PHASE="$(PHASE)" \
-		$(MANAGE) runserver; \
+		$(MANAGE) runserver $(HOST); \
 	else \
 		echo "Invalid phase: $(PHASE)"; \
 		echo "Valid phases: $(VALID_DEV_PHASES)"; \
 		exit 1; \
 	fi
+
+
+# Resets the LOCAL database and media, creates generated demo photos
+# and starts the server in the LIVE phase. The browser is opened with
+# whichever tool the platform has (WSL, macOS or Linux desktop).
+demo:
+	@set -a; \
+	if [ -f "$(ENV_FILE)" ]; then \
+		. "$(ENV_FILE)"; \
+	fi; \
+	set +a; \
+	export DEBUG=True; \
+	export GUESTBOOK_DEV_PHASE=live; \
+	export GUESTBOOK_ACCESS_KEY="$${GUESTBOOK_ACCESS_KEY:-$(DEMO_ACCESS_KEY)}"; \
+	$(MANAGE) migrate --noinput || exit 1; \
+	$(MANAGE) reset_guestbook --confirm || exit 1; \
+	$(MANAGE) seed_demo || exit 1; \
+	( sleep 2; \
+	  url="http://127.0.0.1:8000/join/$${GUESTBOOK_ACCESS_KEY}/"; \
+	  if command -v wslview >/dev/null 2>&1; then wslview "$$url"; \
+	  elif command -v explorer.exe >/dev/null 2>&1; then explorer.exe "$$url"; \
+	  elif command -v open >/dev/null 2>&1; then open "$$url"; \
+	  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$$url"; \
+	  fi \
+	) >/dev/null 2>&1 & \
+	$(MANAGE) runserver $(HOST)
 
 
 closed pre live post archived:
