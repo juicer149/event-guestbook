@@ -15,6 +15,55 @@
         content="{{ theme_color }}"
     >
 
+    {% if description %}
+        <meta
+            name="description"
+            content="{{ description }}"
+        >
+    {% endif %}
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="sv_SE">
+    <meta property="og:title" content="{{ title }}">
+
+    {% if description %}
+        <meta
+            property="og:description"
+            content="{{ description }}"
+        >
+    {% endif %}
+
+    {% if share_image_url %}
+        <meta property="og:image" content="{{ share_image_url }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta name="twitter:card" content="summary_large_image">
+    {% endif %}
+
+    {% if favicon_svg %}
+        <link
+            rel="icon"
+            type="image/svg+xml"
+            href="{% static favicon_svg %}"
+        >
+    {% endif %}
+
+    {% if favicon_png %}
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="{% static favicon_png %}"
+        >
+    {% endif %}
+
+    {% if apple_touch_icon %}
+        <link
+            rel="apple-touch-icon"
+            href="{% static apple_touch_icon %}"
+        >
+    {% endif %}
+
     <title>
         {% block title %}
             {{ title }}

@@ -407,6 +407,13 @@ GUESTBOOK_TITLE = os.environ.get(
 )
 
 
+# Text shown under the title in link previews.
+GUESTBOOK_DESCRIPTION = os.environ.get(
+    "GUESTBOOK_DESCRIPTION",
+    "Dela dina bilder från festen.",
+).strip()
+
+
 # Small line above the title, e.g. "FELICIA 18". Empty hides it.
 GUESTBOOK_EYEBROW = os.environ.get(
     "GUESTBOOK_EYEBROW",
