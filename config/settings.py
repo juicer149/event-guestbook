@@ -432,6 +432,13 @@ GUESTBOOK_THEME_COLOR = os.environ.get(
     "#fafaf8",
 ).strip()
 
+# Optional icon in the divider under the title, from
+# static/img/ornaments/<name>.svg. Empty keeps the plain line.
+GUESTBOOK_ORNAMENT = os.environ.get(
+    "GUESTBOOK_ORNAMENT",
+    "",
+).strip()
+
 
 GUESTBOOK_ACCESS_KEY = os.environ.get(
     "GUESTBOOK_ACCESS_KEY",

@@ -1,0 +1,15 @@
+{% load static %}
+{% if ornament %}
+    <div
+        class="event-ornament"
+        style="--ornament: url('{% static ornament %}')"
+        aria-hidden="true"
+    >
+        <span class="event-ornament__icon"></span>
+    </div>
+{% else %}
+    <div
+        class="event-divider"
+        aria-hidden="true"
+    ></div>
+{% endif %}

@@ -19,10 +19,7 @@
                     {{ title }}
                 </h1>
 
-                <div
-                    class="event-divider"
-                    aria-hidden="true"
-                ></div>
+                {% include "guestbook/_divider.html" %}
             </div>
 
             {% if configuration.show_feed %}

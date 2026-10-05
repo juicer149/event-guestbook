@@ -6,7 +6,11 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from guestbook.access import SESSION_GUEST_ACCESS_KEY
-from guestbook.checks import check_schedule, check_theme
+from guestbook.checks import (
+    check_ornament,
+    check_schedule,
+    check_theme,
+)
 from guestbook.phases import GuestbookPhase
 from guestbook.tests.test_views import state_for
 
@@ -57,6 +61,46 @@ class EventIdentityViewTests(TestCase):
 
         self.assertContains(response, "css/themes/white-party")
         self.assertContains(response, 'content="#123456"')
+
+
+    @override_settings(GUESTBOOK_EYEBROW="", GUESTBOOK_ORNAMENT="")
+    def test_plain_divider_without_ornament(self) -> None:
+        response = self.get_index()
+
+        self.assertContains(response, 'class="event-divider"')
+        self.assertNotContains(response, 'class="event-ornament"')
+
+    @override_settings(GUESTBOOK_EYEBROW="", GUESTBOOK_ORNAMENT="bow")
+    def test_ornament_replaces_divider(self) -> None:
+        response = self.get_index()
+
+        self.assertContains(response, 'class="event-ornament"')
+        self.assertContains(response, "img/ornaments/bow")
+        self.assertNotContains(response, 'class="event-divider"')
+
+
+class OrnamentCheckTests(SimpleTestCase):
+    @override_settings(GUESTBOOK_ORNAMENT="")
+    def test_no_ornament_passes(self) -> None:
+        self.assertEqual(check_ornament(), [])
+
+    @override_settings(GUESTBOOK_ORNAMENT="bow")
+    def test_bow_exists(self) -> None:
+        self.assertEqual(check_ornament(), [])
+
+    @override_settings(GUESTBOOK_ORNAMENT="does-not-exist")
+    def test_missing_ornament_is_an_error(self) -> None:
+        self.assertEqual(
+            [error.id for error in check_ornament()],
+            ["guestbook.E005"],
+        )
+
+    @override_settings(GUESTBOOK_ORNAMENT="../secrets")
+    def test_invalid_ornament_name_is_an_error(self) -> None:
+        self.assertEqual(
+            [error.id for error in check_ornament()],
+            ["guestbook.E004"],
+        )
 
 
 class ThemeCheckTests(SimpleTestCase):

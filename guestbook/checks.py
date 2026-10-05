@@ -5,7 +5,11 @@ from django.contrib.staticfiles import finders
 from django.core.checks import Error, register
 
 from .lifecycle import configured_schedule
-from .themes import THEME_NAME_PATTERN, theme_stylesheet
+from .themes import (
+    THEME_NAME_PATTERN,
+    ornament_image,
+    theme_stylesheet,
+)
 
 
 @register()
@@ -44,6 +48,51 @@ def check_theme(
                     "GUESTBOOK_THEME."
                 ),
                 id="guestbook.E002",
+            )
+        ]
+
+    return []
+
+
+@register()
+def check_ornament(
+    app_configs: Any = None,
+    **kwargs: Any,
+) -> list[Error]:
+    """
+    Refuse to start when the configured ornament does not exist.
+    """
+    ornament = settings.GUESTBOOK_ORNAMENT
+
+    if not ornament:
+        return []
+
+    if not THEME_NAME_PATTERN.match(ornament):
+        return [
+            Error(
+                (
+                    f"GUESTBOOK_ORNAMENT={ornament!r} is not a "
+                    "valid ornament name."
+                ),
+                hint=(
+                    "Use lowercase letters, digits and "
+                    "hyphens, e.g. bow."
+                ),
+                id="guestbook.E004",
+            )
+        ]
+
+    image = ornament_image(ornament)
+
+    if finders.find(image) is None:
+        return [
+            Error(
+                f"Ornament image static/{image} was not found.",
+                hint=(
+                    "Add the SVG or leave GUESTBOOK_ORNAMENT "
+                    "empty to use the plain divider."
+                ),
+                id="guestbook.E005",
             )
         ]
 

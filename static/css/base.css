@@ -130,6 +130,35 @@ img {
     background: var(--gold);
 }
 
+/*
+ * Ornament divider: thin line, icon, thin line. Used instead of
+ * .event-divider when GUESTBOOK_ORNAMENT is set. The icon is an SVG
+ * from static/img/ornaments/ used as a mask, so it takes --gold.
+ */
+.event-ornament {
+    display: flex;
+    width: min(15rem, 70vw);
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.event-ornament::before,
+.event-ornament::after {
+    content: "";
+    height: 1.5px;
+    flex: 1 1 0;
+    background: var(--gold);
+}
+
+.event-ornament__icon {
+    width: 3.5rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    background: var(--gold);
+    -webkit-mask: var(--ornament) center / contain no-repeat;
+    mask: var(--ornament) center / contain no-repeat;
+}
+
 .image-count,
 .phase-message {
     margin: 0;

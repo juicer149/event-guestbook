@@ -3,7 +3,7 @@ from typing import Any
 from django.conf import settings
 from django.http import HttpRequest
 
-from .themes import theme_stylesheet
+from .themes import ornament_image, theme_stylesheet
 
 
 def event(
@@ -16,4 +16,5 @@ def event(
         "eyebrow": settings.GUESTBOOK_EYEBROW,
         "theme_stylesheet": theme_stylesheet(),
         "theme_color": settings.GUESTBOOK_THEME_COLOR,
+        "ornament": ornament_image(),
     }
