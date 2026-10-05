@@ -81,7 +81,7 @@ install: venv
 setup: install migrate
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) check
@@ -90,7 +90,7 @@ setup: install migrate
 run:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) runserver $(HOST)
@@ -99,7 +99,7 @@ run:
 devrun:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	if [ -z "$(PHASE)" ]; then \
@@ -120,7 +120,7 @@ devrun:
 demo:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	export DEBUG=True; \
@@ -147,7 +147,7 @@ closed pre live post archived:
 check:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) check
@@ -156,7 +156,7 @@ check:
 test:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) test
@@ -165,7 +165,7 @@ test:
 verify:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) check; \
@@ -176,7 +176,7 @@ verify:
 makemigrations:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) makemigrations
@@ -185,7 +185,7 @@ makemigrations:
 migrate:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) migrate
@@ -194,7 +194,7 @@ migrate:
 showmigrations:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) showmigrations
@@ -203,7 +203,7 @@ showmigrations:
 superuser:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) createsuperuser
@@ -212,7 +212,7 @@ superuser:
 shell:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) shell
@@ -221,7 +221,7 @@ shell:
 devshell:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(PYTHON)
@@ -230,7 +230,7 @@ devshell:
 collectstatic:
 	@set -a; \
 	if [ -f "$(ENV_FILE)" ]; then \
-		. "$(ENV_FILE)"; \
+		. "$(abspath $(ENV_FILE))"; \
 	fi; \
 	set +a; \
 	$(MANAGE) collectstatic --noinput
