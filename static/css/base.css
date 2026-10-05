@@ -370,7 +370,7 @@ img {
 
 .upload-heading h1 {
     margin: 0;
-    color: var(--text-primary);
+    color: var(--title-color, var(--text-primary));
     font-family:
         "Instrument Serif",
         Georgia,
@@ -402,7 +402,7 @@ img {
 
 .selection-count {
     margin: 0;
-    color: var(--text-primary);
+    color: var(--title-color, var(--text-primary));
     font-size: 1rem;
     line-height: 1.2;
 }
