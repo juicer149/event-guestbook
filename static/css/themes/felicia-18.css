@@ -5,12 +5,16 @@
  *
  * --gold is the accent color (dividers, card borders), kept under
  * that name so base.css works with every theme.
+ *
+ * --title-color is optional (falls back to --text-primary). Here it
+ * is a visible plum, while body text stays darker for readability.
  */
 
 :root {
     --page-background: #fbf6f4;
     --surface: #ffffff;
     --text-primary: #3a2a2e;
+    --title-color: #6e3a4c;
     --text-secondary: #9a8086;
     --text-label: #7a5f66;
     --gold: #c98b8b;
