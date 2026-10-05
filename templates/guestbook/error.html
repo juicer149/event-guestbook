@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ page.heading }} – {{ title }}
+{% endblock %}
+
+{% block body %}
+    <main class="album-page">
+        <header class="album-header">
+            <div class="event-heading">
+                {% if eyebrow %}
+                    <p class="event-label">
+                        {{ eyebrow }}
+                    </p>
+                {% endif %}
+
+                <p class="event-title">
+                    {{ title }}
+                </p>
+
+                <div
+                    class="event-divider"
+                    aria-hidden="true"
+                ></div>
+            </div>
+        </header>
+
+        <div class="empty-feed">
+            <h1 class="empty-feed__title">
+                {{ page.heading }}
+            </h1>
+
+            <p class="empty-feed__text">
+                {{ page.text }}
+            </p>
+        </div>
+
+        {% if page.link_to_album %}
+            <div class="feed-action">
+                <a
+                    class="feed-action__button"
+                    href="{% url 'guestbook:index' %}"
+                >
+                    <span>
+                        Tillbaka till albumet
+                    </span>
+                </a>
+            </div>
+        {% endif %}
+    </main>
+{% endblock %}

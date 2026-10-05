@@ -22,3 +22,9 @@ urlpatterns = [
         include("guestbook.urls"),
     ),
 ]
+
+
+handler400 = "guestbook.errors.bad_request"
+handler403 = "guestbook.errors.permission_denied"
+handler404 = "guestbook.errors.page_not_found"
+handler500 = "guestbook.errors.server_error"
