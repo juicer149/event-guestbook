@@ -290,7 +290,7 @@ img {
     height: 1.5rem;
     flex: 0 0 auto;
     fill: none;
-    stroke: var(--gold);
+    stroke: var(--button-icon, var(--gold));
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2.5;
@@ -597,7 +597,7 @@ img {
     width: 1.5rem;
     height: 1.5rem;
     fill: none;
-    stroke: var(--gold);
+    stroke: var(--button-icon, var(--gold));
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
@@ -645,7 +645,7 @@ img {
     width: 1.5rem;
     height: 1.5rem;
     fill: none;
-    stroke: var(--gold);
+    stroke: var(--button-icon, var(--gold));
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;

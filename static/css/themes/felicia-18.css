@@ -51,17 +51,20 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --plum-975: #2a1d22;
+        --rose-50: #f7e4e6;
         --rose-100: #f3d2d6;
+        --rose-700: #9a5462;
         --rose-300: #d99a9a;
 
         --page-background: var(--plum-975);
         --surface: var(--plum-950);
-        --text-primary: #f5ebe9;
-        --title-color: var(--rose-100);
+        --text-primary: #faf4f3;
+        --title-color: var(--rose-50);
         --text-secondary: #c4a9af;
         --text-label: #d6b8bd;
         --gold: var(--rose-300);
-        --button-background: var(--blush-50);
+        --button-background: var(--rose-100);
+        --button-icon: var(--rose-700);
         --button-text: var(--plum-950);
         --error: #ef9a9a;
 
