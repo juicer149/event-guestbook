@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load guestbook_icons %}
 {% load static %}
 
 {% block title %}
@@ -95,14 +96,7 @@
                     class="feed-action__button"
                     href="{% url 'guestbook:upload_photos' %}"
                 >
-                    <svg
-                        class="feed-action__icon"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path d="M12 5v14"></path>
-                        <path d="M5 12h14"></path>
-                    </svg>
+                    {% icon "plus" class="feed-action__icon" %}
 
                     <span>
                         Lägg till bilder
@@ -138,13 +132,7 @@
                     data-gallery-close
                     aria-label="Stäng bildvisningen"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path d="M6 6l12 12"></path>
-                        <path d="M18 6L6 18"></path>
-                    </svg>
+                    {% icon "close" %}
                 </button>
             </header>
 
@@ -188,12 +176,7 @@
                         data-gallery-prev
                         aria-label="Föregående bild"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <path d="M15 18l-6-6 6-6"></path>
-                        </svg>
+                        {% icon "chevron-left" %}
                     </button>
 
                     <span
@@ -208,12 +191,7 @@
                         data-gallery-next
                         aria-label="Nästa bild"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <path d="M9 6l6 6-6 6"></path>
-                        </svg>
+                        {% icon "chevron-right" %}
                     </button>
 
                     <a
@@ -223,14 +201,7 @@
                         aria-label="Ladda ner originalbilden"
                         title="Ladda ner originalbilden"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <path d="M12 4v11"></path>
-                            <path d="M7 11l5 5 5-5"></path>
-                            <path d="M5 20h14"></path>
-                        </svg>
+                        {% icon "download" %}
 
                         <span>
                             Ladda ner
