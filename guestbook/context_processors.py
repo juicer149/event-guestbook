@@ -39,5 +39,6 @@ def event(
         "eyebrow": settings.GUESTBOOK_EYEBROW,
         "theme_stylesheet": theme_stylesheet(),
         "theme_color": settings.GUESTBOOK_THEME_COLOR,
+        "theme_color_dark": settings.GUESTBOOK_THEME_COLOR_DARK,
         "ornament": ornament_image(),
     }

@@ -439,6 +439,13 @@ GUESTBOOK_THEME_COLOR = os.environ.get(
     "#fafaf8",
 ).strip()
 
+# Browser UI color in dark mode, for themes with a dark variant.
+# Empty means the theme has no dark mode.
+GUESTBOOK_THEME_COLOR_DARK = os.environ.get(
+    "GUESTBOOK_THEME_COLOR_DARK",
+    "",
+).strip()
+
 # Optional icon in the divider under the title, from
 # static/img/ornaments/<name>.svg. Empty keeps the plain line.
 GUESTBOOK_ORNAMENT = os.environ.get(

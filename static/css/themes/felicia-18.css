@@ -37,3 +37,37 @@
     --disabled-background: #ebdfe0;
     --disabled-text: var(--plum-500);
 }
+
+/*
+ * Dark mode follows the visitor's system setting. Only the semantic
+ * variables change, so base.css needs nothing extra. The palette is
+ * the one from the app icon: plum background, blush and rose on top.
+ * GUESTBOOK_THEME_COLOR_DARK should match --page-background here.
+ */
+:root {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --plum-975: #2a1d22;
+        --rose-100: #f3d2d6;
+        --rose-300: #d99a9a;
+
+        --page-background: var(--plum-975);
+        --surface: var(--plum-950);
+        --text-primary: #f5ebe9;
+        --title-color: var(--rose-100);
+        --text-secondary: #c4a9af;
+        --text-label: #d6b8bd;
+        --gold: var(--rose-300);
+        --button-background: var(--blush-50);
+        --button-text: var(--plum-950);
+        --error: #ef9a9a;
+
+        --placeholder: #4a353b;
+        --disabled-border: #5a4248;
+        --disabled-background: #45333a;
+        --disabled-text: #9a8086;
+    }
+}

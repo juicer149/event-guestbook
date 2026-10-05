@@ -13,7 +13,16 @@
     <meta
         name="theme-color"
         content="{{ theme_color }}"
+        {% if theme_color_dark %}media="(prefers-color-scheme: light)"{% endif %}
     >
+
+    {% if theme_color_dark %}
+        <meta
+            name="theme-color"
+            content="{{ theme_color_dark }}"
+            media="(prefers-color-scheme: dark)"
+        >
+    {% endif %}
 
     {% if description %}
         <meta

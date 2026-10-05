@@ -79,6 +79,30 @@ class EventIdentityViewTests(TestCase):
         self.assertNotContains(response, 'class="event-divider"')
 
 
+    @override_settings(GUESTBOOK_EYEBROW="", GUESTBOOK_THEME_COLOR_DARK="")
+    def test_single_theme_color_without_dark_mode(self) -> None:
+        response = self.get_index()
+
+        self.assertNotContains(response, "prefers-color-scheme")
+
+    @override_settings(
+        GUESTBOOK_EYEBROW="",
+        GUESTBOOK_THEME_COLOR_DARK="#2a1d22",
+    )
+    def test_dark_theme_color(self) -> None:
+        response = self.get_index()
+
+        self.assertContains(response, 'content="#2a1d22"')
+        self.assertContains(
+            response,
+            'media="(prefers-color-scheme: dark)"',
+        )
+        self.assertContains(
+            response,
+            'media="(prefers-color-scheme: light)"',
+        )
+
+
 class OrnamentCheckTests(SimpleTestCase):
     @override_settings(GUESTBOOK_ORNAMENT="")
     def test_no_ornament_passes(self) -> None:
