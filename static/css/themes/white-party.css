@@ -1,0 +1,22 @@
+/*
+ * White Party: white and champagne.
+ * GUESTBOOK_THEME=white-party
+ * GUESTBOOK_THEME_COLOR=#fafaf8
+ */
+
+:root {
+    --page-background: #fafaf8;
+    --surface: #ffffff;
+    --text-primary: #262322;
+    --text-secondary: #8c847c;
+    --text-label: #6d655d;
+    --gold: #c7b08a;
+    --button-background: #22201e;
+    --button-text: #fafaf8;
+    --error: #9c2f2f;
+
+    --placeholder: #d9d9d9;
+    --disabled-border: #cfc9c1;
+    --disabled-background: #dedbd6;
+    --disabled-text: #908a84;
+}

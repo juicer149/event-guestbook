@@ -68,6 +68,38 @@ def env_list(
     ]
 
 
+def env_datetime(
+    name: str,
+) -> datetime | None:
+    """
+    Read an ISO 8601 datetime, e.g. 2026-10-24T18:00.
+
+    A missing or empty value returns None. A value without a time
+    zone is interpreted as Stockholm time.
+    """
+    value = os.environ.get(name, "").strip()
+
+    if not value:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as error:
+        raise ValueError(
+            (
+                f"{name} must be an ISO 8601 datetime, "
+                "e.g. 2026-10-24T18:00."
+            )
+        ) from error
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(
+            tzinfo=STOCKHOLM_TZ,
+        )
+
+    return parsed
+
+
 def unique(
     items: list[str],
 ) -> list[str]:
@@ -202,6 +234,10 @@ TEMPLATES = [
                 (
                     "django.contrib.messages."
                     "context_processors.messages"
+                ),
+                (
+                    "guestbook.context_processors."
+                    "event"
                 ),
             ],
         },
@@ -361,6 +397,32 @@ GUESTBOOK_TITLE = os.environ.get(
 )
 
 
+# Small line above the title, e.g. "FELICIA 18". Empty hides it.
+GUESTBOOK_EYEBROW = os.environ.get(
+    "GUESTBOOK_EYEBROW",
+    "",
+).strip()
+
+
+# ---------------------------------------------------------------------
+# Guestbook theme
+#
+# GUESTBOOK_THEME selects static/css/themes/<name>.css, which holds the
+# color variables. GUESTBOOK_THEME_COLOR is the browser UI color and
+# should match the theme's --page-background.
+# ---------------------------------------------------------------------
+
+GUESTBOOK_THEME = os.environ.get(
+    "GUESTBOOK_THEME",
+    "white-party",
+).strip()
+
+GUESTBOOK_THEME_COLOR = os.environ.get(
+    "GUESTBOOK_THEME_COLOR",
+    "#fafaf8",
+).strip()
+
+
 GUESTBOOK_ACCESS_KEY = os.environ.get(
     "GUESTBOOK_ACCESS_KEY",
     "",
@@ -371,6 +433,8 @@ GUESTBOOK_ACCESS_KEY = os.environ.get(
 # Guestbook event schedule
 #
 # Only the event boundaries and phase durations are configured.
+# Both boundaries are optional. Without STARTS_AT there is no CLOSED
+# or PRE phase, and without ENDS_AT the guestbook never leaves LIVE.
 #
 # CLOSED:
 #     moment < PRE_START
@@ -388,22 +452,12 @@ GUESTBOOK_ACCESS_KEY = os.environ.get(
 #     POST_END <= moment
 # ---------------------------------------------------------------------
 
-GUESTBOOK_STARTS_AT = datetime(
-    2026,
-    8,
-    1,
-    18,
-    0,
-    tzinfo=STOCKHOLM_TZ,
+GUESTBOOK_STARTS_AT = env_datetime(
+    "GUESTBOOK_STARTS_AT",
 )
 
-GUESTBOOK_ENDS_AT = datetime(
-    2026,
-    8,
-    2,
-    2,
-    0,
-    tzinfo=STOCKHOLM_TZ,
+GUESTBOOK_ENDS_AT = env_datetime(
+    "GUESTBOOK_ENDS_AT",
 )
 
 GUESTBOOK_PRE_DURATION = timedelta(

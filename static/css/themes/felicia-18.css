@@ -1,0 +1,25 @@
+/*
+ * Felicia 18: blush cream, old rose and plum.
+ * GUESTBOOK_THEME=felicia-18
+ * GUESTBOOK_THEME_COLOR=#fbf6f4
+ *
+ * --gold is the accent color (dividers, card borders), kept under
+ * that name so base.css works with every theme.
+ */
+
+:root {
+    --page-background: #fbf6f4;
+    --surface: #ffffff;
+    --text-primary: #3a2a2e;
+    --text-secondary: #9a8086;
+    --text-label: #7a5f66;
+    --gold: #c98b8b;
+    --button-background: #3a2a2e;
+    --button-text: #fbf6f4;
+    --error: #9c2f2f;
+
+    --placeholder: #eadcdc;
+    --disabled-border: #dcc9cb;
+    --disabled-background: #ebdfe0;
+    --disabled-text: #9a8086;
+}

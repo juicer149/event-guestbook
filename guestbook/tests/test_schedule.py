@@ -111,3 +111,89 @@ class EventScheduleTests(SimpleTestCase):
                 pre_duration=PRE_DURATION,
                 post_duration=POST_DURATION,
             )
+
+
+class OpenEndedScheduleTests(SimpleTestCase):
+    def test_without_dates_is_always_live(self) -> None:
+        schedule = EventSchedule()
+
+        for moment in (
+            EVENT_START - timedelta(days=365),
+            EVENT_START,
+            EVENT_END + timedelta(days=365),
+        ):
+            self.assertEqual(
+                schedule.phase_at(moment),
+                GuestbookPhase.LIVE,
+            )
+
+    def test_without_dates_has_no_derived_boundaries(
+        self,
+    ) -> None:
+        schedule = EventSchedule(
+            pre_duration=PRE_DURATION,
+            post_duration=POST_DURATION,
+        )
+
+        self.assertIsNone(schedule.pre_start)
+        self.assertIsNone(schedule.post_end)
+
+    def test_start_only_opens_and_never_closes(
+        self,
+    ) -> None:
+        schedule = EventSchedule(
+            event_start=EVENT_START,
+            pre_duration=PRE_DURATION,
+        )
+
+        self.assertEqual(
+            schedule.phase_at(
+                EVENT_START
+                - PRE_DURATION
+                - timedelta(microseconds=1),
+            ),
+            GuestbookPhase.CLOSED,
+        )
+        self.assertEqual(
+            schedule.phase_at(EVENT_START - PRE_DURATION),
+            GuestbookPhase.PRE,
+        )
+        self.assertEqual(
+            schedule.phase_at(
+                EVENT_START + timedelta(days=365),
+            ),
+            GuestbookPhase.LIVE,
+        )
+
+    def test_end_only_is_live_until_it_closes(
+        self,
+    ) -> None:
+        schedule = EventSchedule(
+            event_end=EVENT_END,
+            post_duration=POST_DURATION,
+        )
+
+        self.assertEqual(
+            schedule.phase_at(
+                EVENT_END - timedelta(days=365),
+            ),
+            GuestbookPhase.LIVE,
+        )
+        self.assertEqual(
+            schedule.phase_at(EVENT_END),
+            GuestbookPhase.POST,
+        )
+        self.assertEqual(
+            schedule.phase_at(EVENT_END + POST_DURATION),
+            GuestbookPhase.ARCHIVED,
+        )
+
+    def test_rejects_naive_start_without_end(
+        self,
+    ) -> None:
+        with self.assertRaises(ValueError):
+            EventSchedule(
+                event_start=EVENT_START.replace(
+                    tzinfo=None,
+                ),
+            )

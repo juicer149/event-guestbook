@@ -9,9 +9,11 @@
     <main class="album-page">
         <header class="album-header">
             <div class="event-heading">
-                <p class="event-label">
-                    SIMON 30
-                </p>
+                {% if eyebrow %}
+                    <p class="event-label">
+                        {{ eyebrow }}
+                    </p>
+                {% endif %}
 
                 <h1 class="event-title">
                     {{ title }}

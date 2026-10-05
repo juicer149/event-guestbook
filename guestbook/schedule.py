@@ -13,25 +13,43 @@ class EventSchedule:
 
     The schedule only knows when phases occur. It does not know
     which application features are enabled during those phases.
+
+    Both boundaries are optional. A missing boundary removes the
+    phases on that side of LIVE:
+
+        no start, no end:  always LIVE
+        start only:        CLOSED -> PRE -> LIVE, never closes
+        end only:          LIVE -> POST -> ARCHIVED
+        start and end:     CLOSED -> PRE -> LIVE -> POST -> ARCHIVED
     """
 
-    event_start: datetime
-    event_end: datetime
-    pre_duration: timedelta
-    post_duration: timedelta
+    event_start: datetime | None = None
+    event_end: datetime | None = None
+    pre_duration: timedelta = timedelta(0)
+    post_duration: timedelta = timedelta(0)
 
     def __post_init__(self) -> None:
-        if not timezone.is_aware(self.event_start):
+        if (
+            self.event_start is not None
+            and not timezone.is_aware(self.event_start)
+        ):
             raise ValueError(
                 "event_start must be timezone-aware."
             )
 
-        if not timezone.is_aware(self.event_end):
+        if (
+            self.event_end is not None
+            and not timezone.is_aware(self.event_end)
+        ):
             raise ValueError(
                 "event_end must be timezone-aware."
             )
 
-        if self.event_end <= self.event_start:
+        if (
+            self.event_start is not None
+            and self.event_end is not None
+            and self.event_end <= self.event_start
+        ):
             raise ValueError(
                 "event_end must be later than event_start."
             )
@@ -47,17 +65,23 @@ class EventSchedule:
             )
 
     @property
-    def pre_start(self) -> datetime:
+    def pre_start(self) -> datetime | None:
         """
-        Return when the PRE phase begins.
+        Return when the PRE phase begins, if the event has a start.
         """
+        if self.event_start is None:
+            return None
+
         return self.event_start - self.pre_duration
 
     @property
-    def post_end(self) -> datetime:
+    def post_end(self) -> datetime | None:
         """
-        Return when the POST phase ends.
+        Return when the POST phase ends, if the event has an end.
         """
+        if self.event_end is None:
+            return None
+
         return self.event_end + self.post_duration
 
     def phase_at(
@@ -77,6 +101,8 @@ class EventSchedule:
 
             POST:
                 event_end <= moment < post_end
+
+        A missing boundary skips the phases on its side.
         """
 
         if not timezone.is_aware(moment):
@@ -84,11 +110,15 @@ class EventSchedule:
                 "moment must be timezone-aware."
             )
 
-        if moment < self.pre_start:
-            return GuestbookPhase.CLOSED
+        if self.event_start is not None:
+            if moment < self.pre_start:
+                return GuestbookPhase.CLOSED
 
-        if moment < self.event_start:
-            return GuestbookPhase.PRE
+            if moment < self.event_start:
+                return GuestbookPhase.PRE
+
+        if self.event_end is None:
+            return GuestbookPhase.LIVE
 
         if moment < self.event_end:
             return GuestbookPhase.LIVE
