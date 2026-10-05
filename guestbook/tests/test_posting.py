@@ -4,10 +4,13 @@ from tempfile import TemporaryDirectory
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
-from PIL import Image
+from PIL import ExifTags, Image
 
 from guestbook.models import Post, PostImage
 from guestbook.posting import create_post
+from guestbook.tests.test_image_processing import (
+    make_jpeg_with_metadata,
+)
 
 
 def make_uploaded_image(
@@ -119,6 +122,39 @@ class CreatePostTests(TestCase):
 
         self.assertIn(
             "guestbook/originals/",
+            post_image.image.name,
+        )
+
+    def test_stored_original_has_no_gps(
+        self,
+    ) -> None:
+        uploaded = make_jpeg_with_metadata()
+
+        post = create_post([uploaded])
+        post_image = post.images.get()
+
+        with Image.open(
+            post_image.image.path
+        ) as original:
+            self.assertFalse(
+                original.getexif().get_ifd(
+                    ExifTags.IFD.GPSInfo,
+                ),
+            )
+
+    def test_stored_original_is_renamed_jpeg(
+        self,
+    ) -> None:
+        uploaded = make_jpeg_with_metadata()
+
+        post = create_post([uploaded])
+        post_image = post.images.get()
+
+        self.assertTrue(
+            post_image.image.name.endswith(".jpg"),
+        )
+        self.assertNotIn(
+            "IMG_4821",
             post_image.image.name,
         )
 

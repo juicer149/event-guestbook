@@ -5,7 +5,10 @@ from typing import Any
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
-from .image_processing import process_image
+from .image_processing import (
+    normalize_original,
+    process_image,
+)
 from .models import Post, PostImage
 
 
@@ -68,9 +71,17 @@ def _prepare_post_image(
 ) -> PostImage:
     """
     Store one original and thumbnail and return the unsaved model.
+
+    The uploaded file itself is never stored. The original is
+    re-encoded without metadata first, and the thumbnail is made
+    from that cleaned original.
     """
-    processed = process_image(
+    original = normalize_original(
         uploaded_image,
+    )
+
+    processed = process_image(
+        original,
     )
 
     post_image = PostImage(
@@ -78,8 +89,8 @@ def _prepare_post_image(
     )
 
     post_image.image.save(
-        uploaded_image.name,
-        uploaded_image,
+        original.name,
+        original,
         save=False,
     )
 

@@ -76,9 +76,11 @@ Settings are read from `.env`. See `.env.example`.
 | `lifecycle.py` | Connects schedule, configuration and settings |
 | `access.py` | Grants and checks guest access in the session |
 | `posting.py` | Creates a post and its images; removes stored files if the database step fails |
-| `image_processing.py` | Orientation-aware WebP thumbnails |
+| `image_processing.py` | Metadata-free JPEG originals and orientation-aware WebP thumbnails |
 
-The originals are the source of truth. Thumbnails are derived and can be
+Originals are re-encoded as JPEG on upload with EXIF orientation applied
+and all metadata (including GPS position) removed, and stored under a
+random file name. The originals are the source of truth. Thumbnails are derived and can be
 rebuilt with `python manage.py rebuild_thumbnails`.
 
 ## Known Limitations
@@ -87,7 +89,6 @@ Acceptable for one evening among friends, but worth fixing before reuse:
 
 - No upload progress indicator
 - Thumbnails are generated during the upload request
-- Originals keep their EXIF metadata, including GPS location
 - Media files are served publicly by path; only the pages require the
   join link
 - The feed loads every image without pagination
